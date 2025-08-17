@@ -4,7 +4,6 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 import memory from './memory.js';
-import { text } from 'stream/consumers';
 import { providerCall } from './llm/index.js';
 
 const app = express();
@@ -22,13 +21,14 @@ const { writeKV, deleteKV, listKV, writeEpisode, recentEpisodes } = memory;
 
 //memory endpoints
 app.post('/api/memory/remember', (req, res) => {
-  const { key, value } = req.body;
+  const { key, value, text } = req.body;
+
   try {
     if (key && value != null) {
       writeKV(USER_ID, key, value);
       return res.json({ status: 'OK', type: 'kv' });
     } 
-    if (text) {
+    if (text && typeof text === 'string' && text.trim() && text.length > 0) {
       writeEpisode(USER_ID, text);
       return res.json({ status: 'OK', type: 'epi' });
     }
@@ -45,7 +45,7 @@ app.post('/api/memory/forget', (req, res) => {
     if (!key) {
       return res.status(400).json({ error: 'Key is required to forget' });
     }
-    forgetKV(USER_ID, key);
+    deleteKV(USER_ID, key);
     res.json({ status: 'OK' });
   } catch (error) {
     console.error('Memory delete error:', error);
@@ -186,9 +186,6 @@ app.post('/api/chat/completions', async (req, res) => {
 // Start server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  console.log(`Health check: http://localhost:${PORT}/health`);
-  console.log(`Memory endpoint: http://localhost:${PORT}/api/memory`);
-  console.log(`Chat endpoint: http://localhost:${PORT}/api/chat/completions`);
   
   if (!process.env.OPENROUTER_API_KEY) {
     console.warn('⚠️  Warning: OPENROUTER_API_KEY environment variable not set');
