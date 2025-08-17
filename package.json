@@ -1,0 +1,15 @@
+{
+  "name": "simple-chat-app-js",
+  "version": "1.0.0",
+  "description": "A simple chat app with React client and Express server using OpenRouter for LLM completions",
+  "scripts": {
+    "install:all": "cd llm-chat && npm install && cd ../server && npm install",
+    "dev:client": "cd llm-chat && npm run dev",
+    "dev:server": "cd server && npm run dev",
+    "start:client": "cd llm-chat && npm run dev",
+    "start:server": "cd server && npm start"
+  },
+  "keywords": ["chat", "llm", "openrouter", "react", "express"],
+  "author": "",
+  "license": "ISC"
+}
