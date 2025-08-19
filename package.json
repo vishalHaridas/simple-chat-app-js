@@ -9,7 +9,12 @@
     "start:client": "cd llm-chat && npm run dev",
     "start:server": "cd server && npm start"
   },
-  "keywords": ["chat", "llm", "openrouter", "react", "express"],
-  "author": "",
-  "license": "ISC"
+  "keywords": [
+    "chat",
+    "llm",
+    "openrouter",
+    "react",
+    "express"
+  ],
+  "author": ""
 }
