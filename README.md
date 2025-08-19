@@ -18,7 +18,7 @@ I built this application to learn the following:
 - **State Management**: Managing chat state
 
 ## Next Steps
-To extend this project, you could add:
+I will look into extending this project by adding:
 - Streaming responses ✅
 - Multiple LLM model switching
 - Chat history persistence
