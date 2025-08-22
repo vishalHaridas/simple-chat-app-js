@@ -42,6 +42,11 @@ export const createChatRepository = (db) => {
     return result.lastInsertRowid; 
   };
 
+  const createMessage = (chatId, text, sender) => {
+    const result = insertMessage.run({ chat_id: chatId, text, sender });
+    return result.lastInsertRowid;
+  };
+
   const getLastMessageOfChat = (chatId) => {
     return getLastMessageFromChat.get(chatId);
   };
@@ -57,28 +62,14 @@ export const createChatRepository = (db) => {
   const getAllChats = () => {
     return getAllChatsByNewestMessageFirst.all();
   };
-
-
-  const addMessageToChat = (chatId, text, sender) => {
-    insertMessage.run({ chat_id: chatId, text, sender });
-    const lastMessage = getLastMessageOfChat(chatId);
-    if (lastMessage) {
-      updateChatLastMessage(chatId, lastMessage.created_at);
-    }
-  };
-
-  const createChatWithMessage = (userId, text, sender) => {
-    const chatId = createChat(userId);
-    addMessageToChat(chatId, text, sender);
-
-    return chatId;
-  };
-
+  
   return { 
-    createChatWithMessage,
-    addMessageToChat,
-    getAllChats,
+    createChat,
+    createMessage,
+    getLastMessageOfChat,
+    updateChatLastMessage,
     getChatMessagesById,
+    getAllChats,
   };
 };
 
