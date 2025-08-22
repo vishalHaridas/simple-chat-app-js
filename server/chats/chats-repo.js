@@ -25,6 +25,10 @@ export const createChatRepository = (db) => {
     SELECT * FROM chats ORDER BY last_message_at DESC
   `);
 
+  const getChatDetailsById = db.prepare(`
+    SELECT * FROM chats WHERE id = ?
+  `);
+
 
   const createChat = (userId) => {
     const dateTime = Date.now();
@@ -47,11 +51,15 @@ export const createChatRepository = (db) => {
     return result.lastInsertRowid;
   };
 
+  const getChatDetails = (chatId) => {
+    return getChatDetailsById.get(chatId);
+  };
+
   const getLastMessageOfChat = (chatId) => {
     return getLastMessageFromChat.get(chatId);
   };
 
-  const updateChatLastMessage = (chatId, last_message_at_value) => {
+  const updateLastMessageTimeOfChat = (chatId, last_message_at_value) => {
     updateChatLastMessageTime.run(last_message_at_value, chatId);
   };
 
@@ -67,9 +75,10 @@ export const createChatRepository = (db) => {
     createChat,
     createMessage,
     getLastMessageOfChat,
-    updateChatLastMessage,
+    updateLastMessageTimeOfChat,
     getChatMessagesById,
     getAllChats,
+    getChatDetails
   };
 };
 

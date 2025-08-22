@@ -63,7 +63,7 @@ describe('Chats Repository Wrappers', () => {
   test('updateChatLastMessage updates the last_message_at field', () => {
     const chatId = repo.createChat('user1');
     const timestamp = new Date().toISOString();
-    repo.updateChatLastMessage(chatId, timestamp);
+    repo.updateLastMessageTimeOfChat(chatId, timestamp);
     const chat = db.prepare('SELECT * FROM chats WHERE id = ?').get(chatId);
     expect(chat.last_message_at).toBe(timestamp);
   });
