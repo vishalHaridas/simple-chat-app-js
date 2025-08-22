@@ -1,8 +1,9 @@
 import { initializeChatDB, 
+  initializePreparedStatements,
   addMessageToChat,
   getAllChats,
   getChatMessagesById,
-  createChatWithMessage } from '../../chats/chats-db';
+  createChatWithMessage } from '../../chats/chats-repo';
 
 describe('Chats DB', () => {
 
@@ -11,8 +12,8 @@ describe('Chats DB', () => {
   let dbInx;
   let createChatDbDeps;
   beforeAll(() => {
-    dbDeps = initializeChatDB(isTesting = true);
-    dbInx = dbDeps.db;
+    dbInx = initializeChatDB(isTesting = true);
+    dbDeps = initializePreparedStatements(dbInx);
 
     createChatDbDeps = {
       dbInsertChat: dbDeps.insertChat,

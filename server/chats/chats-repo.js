@@ -21,6 +21,11 @@ export const initializeChatDB = (isTesting = false) => {
     );
   `);
 
+    return db;
+};
+
+export const initializePreparedStatements = (db) => {
+
   const insertChat = db.prepare(`
     INSERT INTO chats(title, user_id) VALUES (@title, @user_id)
   `);
@@ -54,9 +59,7 @@ export const initializeChatDB = (isTesting = false) => {
     getAllChatsByNewestMessageFirst,
     getLastMessageFromChat,
     getNewestSortedChatMessagesById,
-  
-    db,
-  };
+  }
 };
 
 
