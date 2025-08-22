@@ -1,5 +1,4 @@
 import Database from 'better-sqlite3';
-import { write } from 'fs';
 const db = new Database('memory.db');
 
 db.exec(`
