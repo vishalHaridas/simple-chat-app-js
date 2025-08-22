@@ -1,26 +1,15 @@
 import { initializeChatDB, 
-  initializePreparedStatements,
-  addMessageToChat,
-  getAllChats,
-  getChatMessagesById,
-  createChatWithMessage } from '../../chats/chats-repo';
+  createChatRepository
+} from '../../chats/chats-repo';
 
 describe('Chats DB', () => {
 
   const userId = 'test_user';
-  let dbDeps;
   let dbInx;
-  let createChatDbDeps;
+  let chatRepo;
   beforeAll(() => {
     dbInx = initializeChatDB(isTesting = true);
-    dbDeps = initializePreparedStatements(dbInx);
-
-    createChatDbDeps = {
-      dbInsertChat: dbDeps.insertChat,
-      dbInsertMessage: dbDeps.insertMessage,
-      dbGetLastMessageFromChat: dbDeps.getLastMessageFromChat,
-      dbUpdateChatLastMessage: dbDeps.updateChatLastMessageTime,
-    }
+    chatRepo = createChatRepository(dbInx);
   });
 
   beforeEach(() => {
@@ -35,8 +24,8 @@ describe('Chats DB', () => {
 
 
   it('should create a new chat properly', async () => {
-    const TextMessage = 'Hello, this is a test message';
-    const chatId = createChatWithMessage({...createChatDbDeps}, userId, TextMessage, 'user');
+    const sampleTextMessage = 'Hello, this is a test message';
+    const chatId = chatRepo.createChatWithMessage(userId, sampleTextMessage, 'user');
     expect(chatId).toBeDefined();
 
     const chat = dbInx.prepare('SELECT * FROM chats WHERE id = ?').get(chatId);
@@ -44,7 +33,7 @@ describe('Chats DB', () => {
 
     const lastMessage = dbInx.prepare('SELECT * FROM messages WHERE chat_id = ? ORDER BY created_at DESC LIMIT 1').get(chatId);
     expect(lastMessage).toBeDefined();
-    expect(lastMessage.text).toBe(TextMessage);
+    expect(lastMessage.text).toBe(sampleTextMessage);
 
     expect(chat.user_id).toBe(userId);
     expect(chat.title).toMatch(/Chat @/);
@@ -57,11 +46,11 @@ describe('Chats DB', () => {
     const TextMessage2 = 'Second message';
     const TextMessage3 = 'Third message';
 
-    const chatId = createChatWithMessage({...createChatDbDeps}, userId, TextMessage1, 'user');
-    addMessageToChat(dbDeps.insertMessage, dbDeps.getLastMessageFromChat, dbDeps.updateChatLastMessageTime, chatId, TextMessage2, 'user');
-    addMessageToChat(dbDeps.insertMessage, dbDeps.getLastMessageFromChat, dbDeps.updateChatLastMessageTime, chatId, TextMessage3, 'user');
+    const chatId = chatRepo.createChatWithMessage(userId, TextMessage1, 'user');
+    chatRepo.addMessageToChat(chatId, TextMessage2, 'user');
+    chatRepo.addMessageToChat(chatId, TextMessage3, 'user');
 
-    const messages = getChatMessagesById(dbDeps.getNewestSortedChatMessagesById, chatId);
+    const messages = chatRepo.getChatMessagesById(chatId);
     expect(messages).toBeDefined();
     expect(messages.length).toBe(3);
     expect(messages[0].text).toBe(TextMessage1);
@@ -70,12 +59,12 @@ describe('Chats DB', () => {
   });
 
   it('should get the list of all chats in descending order', async () => {
-    const chatId1 = createChatWithMessage({...createChatDbDeps}, userId, 'First chat message', 'user');
+    const chatId1 = chatRepo.createChatWithMessage(userId, 'First chat message', 'user');
     //delay to ensure different timestamps
     await new Promise(resolve => setTimeout(resolve, 1000));
-    const chatId2 = createChatWithMessage({...createChatDbDeps}, userId, 'Second chat message', 'user');
+    const chatId2 = chatRepo.createChatWithMessage(userId, 'Second chat message', 'user');
 
-    const chats = getAllChats(dbDeps.getAllChatsByNewestMessageFirst);
+    const chats = chatRepo.getAllChats();
     expect(chats).toBeDefined();
     expect(chats.length).toBe(2);
     expect(chats[0].id).toBe(chatId2);
@@ -83,16 +72,16 @@ describe('Chats DB', () => {
   });
 
   it('should get the list of all chats in descending order after adding messages', async () => {
-    const chatId1 = createChatWithMessage({...createChatDbDeps}, userId, 'First chat message', 'user');
+    const chatId1 = chatRepo.createChatWithMessage(userId, 'First chat message', 'user');
     //delay to ensure different timestamps
     await new Promise(resolve => setTimeout(resolve, 1000));
-    const chatId2 = createChatWithMessage({...createChatDbDeps}, userId, 'Second chat message', 'user');
+    const chatId2 = chatRepo.createChatWithMessage(userId, 'Second chat message', 'user');
 
     // Add a new message to the first chat to update its last_message_at
     await new Promise(resolve => setTimeout(resolve, 1000));
-    addMessageToChat(dbDeps.insertMessage, dbDeps.getLastMessageFromChat, dbDeps.updateChatLastMessageTime, chatId1, 'New message in first chat', 'user');
+    chatRepo.addMessageToChat(chatId1, 'New message in first chat', 'user');
 
-    const chats = getAllChats(dbDeps.getAllChatsByNewestMessageFirst);
+    const chats = chatRepo.getAllChats();
     expect(chats).toBeDefined();
     expect(chats.length).toBe(2);
     expect(chats[0].id).toBe(chatId1); // First chat should now be first
