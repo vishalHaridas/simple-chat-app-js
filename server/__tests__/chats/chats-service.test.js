@@ -18,7 +18,7 @@ describe('Chats Service', () => {
     db.exec('DELETE FROM messages');
     db.exec('DELETE FROM chats');
 
-    timeAfterOneSecond = oneSecondIncrementedTime();
+    timeAfterOneSecond = oneSecondIncrementedTime(new Date());
   });
 
   it('should insert a chat for a user', () => {

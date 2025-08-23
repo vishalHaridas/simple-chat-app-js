@@ -14,7 +14,7 @@ describe('Chats Repository Wrappers', () => {
   beforeEach(() => {
     db.exec('DELETE FROM messages');
     db.exec('DELETE FROM chats');
-    timeAfterOneSecond = oneSecondIncrementedTime()
+    timeAfterOneSecond = oneSecondIncrementedTime(new Date());
   });
 
   afterAll(() => {

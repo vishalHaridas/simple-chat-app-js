@@ -1,8 +1,6 @@
-export default oneSecondIncrementedTime = () => {
-  const date = new Date();
-
-  return () => {
-    date.setSeconds(date.getSeconds() + 1);
+export default oneSecondIncrementedTime = (date) => {
+  return (increment = 1) => {
+    date.setSeconds(date.getSeconds() + increment);
     return date.toISOString();
   }
 }
