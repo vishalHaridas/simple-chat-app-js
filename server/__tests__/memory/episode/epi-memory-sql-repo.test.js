@@ -1,4 +1,5 @@
 import { createEpiMemorySQLRepo, initializeKVMemoryDB } from '../../../features/memory/episode/epi-memory-sql-repo';
+import oneSecondIncrementedTime from '../../utils/oneSecondIncrementedTime';
 
 describe('Episodic Memory SQL repo', () => {
 
@@ -10,8 +11,11 @@ describe('Episodic Memory SQL repo', () => {
     repo = createEpiMemorySQLRepo(db);
   });
 
+  let timeAfterOneSecond
   beforeEach(() => {
     db.exec('DELETE FROM mem_epi');
+
+    timeAfterOneSecond = oneSecondIncrementedTime(new Date())
   });
 
   afterAll(() => {
@@ -19,9 +23,9 @@ describe('Episodic Memory SQL repo', () => {
   });
   
   it('should write episode and retrieve recent episodes in order', () => {
-    repo.writeEpisode('user1', 'Episode 1');
-    repo.writeEpisode('user1', 'Episode 2');
-    repo.writeEpisode('user1', 'Episode 3');
+    repo.writeEpisode('user1', 'Episode 1', timeAfterOneSecond());
+    repo.writeEpisode('user1', 'Episode 2', timeAfterOneSecond());
+    repo.writeEpisode('user1', 'Episode 3', timeAfterOneSecond());
 
     const episodes = repo.recentEpisodes('user1', 2);
     expect(episodes.length).toBe(2);
@@ -31,7 +35,7 @@ describe('Episodic Memory SQL repo', () => {
 
   it('should limit the number of recent episodes returned', () => {
     for (let i = 1; i <= 10; i++) {
-      repo.writeEpisode('user1', `Episode ${i}`);
+      repo.writeEpisode('user1', `Episode ${i}`, timeAfterOneSecond());
     }
 
     const episodes = repo.recentEpisodes('user1', 5);
