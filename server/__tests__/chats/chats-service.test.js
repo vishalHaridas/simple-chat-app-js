@@ -1,5 +1,5 @@
-import { createChatService } from '../../chats/chats-service';
-import { initializeChatDB, createChatRepository } from '../../chats/chats-repo';  
+import { createChatService } from '../../features/chats/chats-service';
+import { initializeChatDB, createChatRepository } from '../../features/chats/chats-repo';  
 import oneSecondIncrementedTime from '../utils/oneSecondIncrementedTime';
 
 describe('Chats Service', () => {

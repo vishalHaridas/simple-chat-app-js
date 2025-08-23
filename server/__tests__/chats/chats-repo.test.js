@@ -1,4 +1,4 @@
-import { initializeChatDB, createChatRepository } from '../../chats/chats-repo';
+import { initializeChatDB, createChatRepository } from '../../features/chats/chats-repo';
 import oneSecondIncrementedTime from '../utils/oneSecondIncrementedTime';
 
 describe('Chats Repository Wrappers', () => {

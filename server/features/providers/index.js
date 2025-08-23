@@ -1,7 +1,8 @@
 import { LMStudioClient, Chat } from "@lmstudio/sdk";
 
-const openrouterAPI = async (payload, { signal = {}}) => {
+const openrouterAPI = async (payload, { signal = {} }) => {
   return new Response("Not implemented yet", { status: 501 });
+
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     signal,

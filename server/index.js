@@ -4,7 +4,8 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 import memory from './memory.js';
-import { providerCall } from './llm/index.js';
+import { providerCall } from './features/providers/index.js';
+import { createMemoryRouter } from './features/memory/index.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -14,56 +15,12 @@ const USER_ID = 'default';
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use('/api/memory', () => createMemoryRouter(memory, USER_ID));
 
 // Memory functions
 const { writeKV, deleteKV, listKV, writeEpisode, recentEpisodes } = memory;
 
 
-//memory endpoints
-app.post('/api/memory/remember', (req, res) => {
-  const { key, value, text } = req.body;
-
-  try {
-    if (key && value != null) {
-      writeKV(USER_ID, key, value);
-      return res.json({ status: 'OK', type: 'kv' });
-    } 
-    if (text && typeof text === 'string' && text.trim() && text.length > 0) {
-      writeEpisode(USER_ID, text);
-      return res.json({ status: 'OK', type: 'epi' });
-    }
-    res.status(400).json({ error: 'Invalid request, provide key/value or text' });
-  } catch (error) {
-    console.error('Memory write error:', error);
-    res.status(500).json({ error: 'Failed to write memory', message: error.message });
-  }
-});
-
-app.post('/api/memory/forget', (req, res) => {
-  const { key } = req.body || {};
-  try {
-    if (!key) {
-      return res.status(400).json({ error: 'Key is required to forget' });
-    }
-    deleteKV(USER_ID, key);
-    res.json({ status: 'OK' });
-  } catch (error) {
-    console.error('Memory delete error:', error);
-    res.status(500).json({ error: 'Failed to delete memory', message: error.message });
-  }
-});
-
-app.get('/api/memory/list', (req, res) => {
-  try {
-    const items = listKV(USER_ID);
-    res.json({ items });
-  } catch (error) {
-    console.error('Memory list error:', error);
-    res.status(500).json({ error: 'Failed to list memory', message: error.message });
-  }
-});
-
-// Health check endpoint
 app.get('/health', (_, res) => {
   res.json({ status: 'OK', message: 'LLM Chat Server is running' });
 });
