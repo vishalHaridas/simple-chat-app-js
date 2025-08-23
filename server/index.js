@@ -3,7 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 
 dotenv.config();
-import memory from './memory.js';
+import memory from './features/memory/memory.js';
 import { providerCall } from './features/providers/index.js';
 import { createMemoryRouter } from './features/memory/index.js';
 

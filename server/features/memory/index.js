@@ -1,6 +1,6 @@
 import express from 'express';
 
-export const createMemoryRouter = (memoryModule, userId) => {
+export const createMemoryRouter = (keyValueService, episodicService, userId) => {
   const router = express.Router();
   const USER_ID = userId || 'default_user';
 
@@ -9,11 +9,11 @@ export const createMemoryRouter = (memoryModule, userId) => {
 
   try {
     if (key && value != null) {
-      memoryModule.writeKV(USER_ID, key, value);
+      keyValueService.writeKV(USER_ID, key, value);
       return res.json({ status: 'OK', type: 'kv' });
     } 
     if (text && typeof text === 'string' && text.trim() && text.length > 0) {
-      writeEpisode(USER_ID, text);
+      episodicService.writeEpisode(USER_ID, text);
       return res.json({ status: 'OK', type: 'epi' });
     }
     res.status(400).json({ error: 'Invalid request, provide key/value or text' });
@@ -30,7 +30,7 @@ export const createMemoryRouter = (memoryModule, userId) => {
       if (!key) {
         return res.status(400).json({ error: 'Key is required to forget' });
       }
-      memoryModule.deleteKV(USER_ID, key);
+      keyValueService.deleteKV(USER_ID, key);
       res.json({ status: 'OK' });
     } catch (error) {
       console.error('Memory delete error:', error);
@@ -40,7 +40,7 @@ export const createMemoryRouter = (memoryModule, userId) => {
 
   router.get('/list', (req, res) => {
     try {
-      const items = memoryModule.listKV(USER_ID);
+      const items = keyValueService.listKV(USER_ID);
       res.json({ items });
     } catch (error) {
       console.error('Memory list error:', error);
