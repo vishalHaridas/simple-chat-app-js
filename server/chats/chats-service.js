@@ -1,3 +1,8 @@
+/***
+ * @file chats-service.js
+ * @description Service layer for handling chat-related operations.
+ * This layer interacts with the chat repository to perform CRUD operations on chats and messages.
+***/
 export const createChatService = (chatRepo) => {
 	const createNewChat = (userId, text, createdAt) => {
 		const createdAtValue = createdAt || new Date().toISOString();
@@ -16,7 +21,7 @@ export const createChatService = (chatRepo) => {
 			last_message_at: chatDetails.last_message_at
 		};
 	};
-
+	
 	const addChatMessage = (chatId, text, sender, createdAt) => {
 		const createdAtValue = createdAt || new Date().toISOString();
 

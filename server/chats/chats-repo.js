@@ -1,5 +1,10 @@
 import Database from "better-sqlite3";
 
+/***
+ * Creates a chat repository for managing chat and message data.
+ * @param {Database} db - The database instance to use for chat operations.
+ * @returns {Object} An object containing methods to create chats, messages, and retrieve chat details.
+***/
 export const createChatRepository = (db) => {
   const insertChat = db.prepare(`
     INSERT INTO chats(title, user_id) VALUES (@title, @user_id)
@@ -97,6 +102,11 @@ export const createChatRepository = (db) => {
   };
 };
 
+/*** 
+ * Initializes the chat database with the necessary tables.
+ * @param {boolean} isTesting - If true, uses an in-memory database for testing.
+ * @returns {Database} The initialized database instance.
+***/
 export const initializeChatDB = (isTesting = false) => {
   const dbName = isTesting ? ':memory:' : 'chats.db';
   const db = new Database(dbName);
