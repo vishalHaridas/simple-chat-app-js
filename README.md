@@ -15,14 +15,17 @@ A barebones chat application to understand the basics of LLMs. This project cons
 ## Learning Points
 I built this application to learn the following:
 - **LLM API Integration**: The Completions API, and how it works
+  - **Streaming** required looking into SSE, and going down the rabbit hole of communication protocols
 - **State Management**: Managing chat state
 
 ## Next Steps
 I will look into extending this project by adding:
 - Streaming responses ✅
-- Multiple LLM model switching
-- Chat history persistence
+- Chat history persistence 🚧
+- LLM Provider Switcher 🚧
+- Multiple LLM model switching 
 - Different conversation modes
 - Message editing
-- Multiple LLM model switching
-- Cost tracking
+- Token/Cost tracking
+- ✨**RAG**✨
+- ✨**MCP**✨
