@@ -21,15 +21,16 @@ export const createChatService = (chatRepo) => {
 		const createdAtValue = createdAt || new Date().toISOString();
 
 		const messageId = chatRepo.createMessage(chatId, text, sender, createdAtValue);
-		const lastMessage = chatRepo.getLastMessageOfChat(chatId);
-		chatRepo.updateLastMessageTimeOfChat(chatId, lastMessage.created_at);
+		chatRepo.updateLastMessageTimeOfChat(chatId, createdAtValue);
+
+		const lastMessageDetails = chatRepo.getLastMessageOfChat(chatId);
 
 		return {
 			id: messageId,
 			chat_id: chatId,
-			text,
-			sender,
-			created_at: lastMessage.created_at
+			text: lastMessageDetails.text,
+			sender: lastMessageDetails.sender,
+			created_at: lastMessageDetails.created_at
 		};
 	}
 

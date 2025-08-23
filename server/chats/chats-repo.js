@@ -39,7 +39,7 @@ export const createChatRepository = (db) => {
 
 
   const createChat = (userId, createdAt) => {
-    const dateTime = Date.now();
+    const dateTime = createdAt || Date.now();
     // should be Chat @ 7:57PM on 20 Aug 2025
     const formattedDate = dateTime.toLocaleString('en-US', {
       month: 'short',
