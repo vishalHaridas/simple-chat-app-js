@@ -1,47 +1,50 @@
-export const createChatService = (chatRepo, isTesting = false) => {
-  const createNewChat = (userId, text) => {
-  const chatId = chatRepo.createChat(userId);
+export const createChatService = (chatRepo) => {
+	const createNewChat = (userId, text, createdAt) => {
+		const createdAtValue = createdAt || new Date().toISOString();
+		const chatId = chatRepo.createChat(userId, createdAtValue);
 
-  //Assumption tied that only a user can create a chat
-  chatRepo.createMessage(chatId, text, 'user');
-  const lastMessage = chatRepo.getLastMessageOfChat(chatId);
-  chatRepo.updateLastMessageTimeOfChat(chatId, lastMessage.created_at);
+		//Assumption tied that only a user can create a chat
+		chatRepo.createMessage(chatId, text, 'user', createdAtValue);
+		const lastMessage = chatRepo.getLastMessageOfChat(chatId);
+		chatRepo.updateLastMessageTimeOfChat(chatId, lastMessage.created_at);
 
-  const chatDetails = chatRepo.getChatDetails(chatId);
-    return {
-      id: chatId,
-      title: chatDetails.title,
-      created_at: chatDetails.created_at,
-      last_message_at: chatDetails.last_message_at
-    };
-  };
+		const chatDetails = chatRepo.getChatDetails(chatId);
+		return {
+			id: chatId,
+			title: chatDetails.title,
+			created_at: chatDetails.created_at,
+			last_message_at: chatDetails.last_message_at
+		};
+	};
 
-  const addChatMessage = (chatId, text, sender) => {
-    const messageId = chatRepo.createMessage(chatId, text, sender);
-    const lastMessage = chatRepo.getLastMessageOfChat(chatId);
-    chatRepo.updateLastMessageTimeOfChat(chatId, lastMessage.created_at);
+	const addChatMessage = (chatId, text, sender, createdAt) => {
+		const createdAtValue = createdAt || new Date().toISOString();
 
-    return {
-      id: messageId,
-      chat_id: chatId,
-      text,
-      sender,
-      created_at: lastMessage.created_at
-    };
-  }
+		const messageId = chatRepo.createMessage(chatId, text, sender, createdAtValue);
+		const lastMessage = chatRepo.getLastMessageOfChat(chatId);
+		chatRepo.updateLastMessageTimeOfChat(chatId, lastMessage.created_at);
 
-  const getAllMessagesFromChat = (chatId) => {
-    return chatRepo.getChatMessagesById(chatId);
-  };
+		return {
+			id: messageId,
+			chat_id: chatId,
+			text,
+			sender,
+			created_at: lastMessage.created_at
+		};
+	}
 
-  const getAllChats = (userId) => {
-    return chatRepo.getAllChats();
-  };
+	const getAllMessagesFromChat = (chatId) => {
+		return chatRepo.getChatMessagesById(chatId);
+	};
 
-  return {
-    createNewChat,
-    addChatMessage,
-    getAllMessagesFromChat,
-    getAllChats
-  };
+	const getAllChats = (userId) => {
+		return chatRepo.getAllChats();
+	};
+
+	return {
+		createNewChat,
+		addChatMessage,
+		getAllMessagesFromChat,
+		getAllChats
+	};
 };

@@ -1,5 +1,6 @@
 import { createChatService } from '../../chats/chats-service';
 import { initializeChatDB, createChatRepository } from '../../chats/chats-repo';  
+import oneSecondIncrementedTime from '../utils/oneSecondIncrementedTime';
 
 describe('Chats Service', () => {
 
@@ -12,14 +13,17 @@ describe('Chats Service', () => {
     chatService = createChatService(chatRepo, isTesting = true);
   });
 
+  let timeAfterOneSecond;
   beforeEach(() => {
     db.exec('DELETE FROM messages');
     db.exec('DELETE FROM chats');
+
+    timeAfterOneSecond = oneSecondIncrementedTime();
   });
 
   it('should insert a chat for a user', () => {
     const firstMessage = 'Hello, this is a test chat!';
-    const chat = chatService.createNewChat(userId, firstMessage);
+    const chat = chatService.createNewChat(userId, firstMessage, timeAfterOneSecond());
 
     expect(chat).toHaveProperty('title');
     expect(chat).toHaveProperty('created_at');
@@ -48,12 +52,11 @@ describe('Chats Service', () => {
 
   it('should add a message to an existing chat', async () => {
     const firstMessage = 'Hello, this is a test chat!';
-    const chat = chatService.createNewChat(userId, firstMessage);
+    const chat = chatService.createNewChat(userId, firstMessage, timeAfterOneSecond());
     const secondMessage = 'This is a follow-up message.';
     
     // Add a new message to the existing chat
-    await new Promise(resolve => setTimeout(resolve, 1000)); 
-    const addedMessage = chatService.addChatMessage(chat.id, secondMessage, 'user');
+    const addedMessage = chatService.addChatMessage(chat.id, secondMessage, 'user', timeAfterOneSecond());
 
     expect(addedMessage).toBeDefined();
     expect(addedMessage.text).toBe(secondMessage);
@@ -72,9 +75,8 @@ describe('Chats Service', () => {
     const firstMessage = 'Hello, this is a test chat!';
     const secondMessage = 'This is a follow-up message.';
 
-    const chat = chatService.createNewChat(userId, firstMessage);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    chatService.addChatMessage(chat.id, secondMessage, 'user');
+    const chat = chatService.createNewChat(userId, firstMessage, timeAfterOneSecond());
+    chatService.addChatMessage(chat.id, secondMessage, 'user', timeAfterOneSecond());
 
     const messages = chatService.getAllMessagesFromChat(chat.id);
     expect(messages).toBeDefined();
@@ -84,13 +86,14 @@ describe('Chats Service', () => {
   });
 
   it('should retrieve all chats for a user', () => {
-    const chat1 = chatService.createNewChat(userId, 'First chat message');
-    const chat2 = chatService.createNewChat(userId, 'Second chat message');
+    const chat1 = chatService.createNewChat(userId, 'First chat message', timeAfterOneSecond());
+    const chat2 = chatService.createNewChat(userId, 'Second chat message', timeAfterOneSecond());
 
     const chats = chatService.getAllChats(userId);
+
     expect(chats).toBeDefined();
     expect(chats.length).toBe(2);
-    expect(chats[0].id).toBe(chat1.id);
-    expect(chats[1].id).toBe(chat2.id);
+    expect(chats[0].id).toBe(chat2.id);
+    expect(chats[1].id).toBe(chat1.id);
   });
 });

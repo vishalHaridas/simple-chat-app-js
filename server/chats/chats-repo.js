@@ -5,8 +5,16 @@ export const createChatRepository = (db) => {
     INSERT INTO chats(title, user_id) VALUES (@title, @user_id)
   `);
 
+  const insertChatWithTime = db.prepare(`
+    INSERT INTO chats(title, user_id, created_at) VALUES (@title, @user_id, @created_at)
+  `);
+
   const insertMessage = db.prepare(`
     INSERT INTO messages(chat_id, text, sender) VALUES (@chat_id, @text, @sender)
+  `);
+  
+  const insertMessageWithTime = db.prepare(`
+    INSERT INTO messages(chat_id, text, sender, created_at) VALUES (@chat_id, @text, @sender, @created_at)
   `);
 
   const getLastMessageFromChat = db.prepare(`
@@ -30,10 +38,10 @@ export const createChatRepository = (db) => {
   `);
 
 
-  const createChat = (userId) => {
+  const createChat = (userId, createdAt) => {
     const dateTime = Date.now();
     // should be Chat @ 7:57PM on 20 Aug 2025
-    const formattedDate = new Date(dateTime).toLocaleString('en-US', {
+    const formattedDate = dateTime.toLocaleString('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -42,12 +50,19 @@ export const createChatRepository = (db) => {
       hour12: true
     });
     const generatedTitle = `Chat @ ${formattedDate}`;
-    const result = insertChat.run({ title: generatedTitle, user_id: userId });
+
+    const result = createdAt 
+      ? insertChatWithTime.run({ title: generatedTitle, user_id: userId, created_at: createdAt }) 
+      : insertChat.run({ title: generatedTitle, user_id: userId });
+
     return result.lastInsertRowid; 
   };
 
-  const createMessage = (chatId, text, sender) => {
-    const result = insertMessage.run({ chat_id: chatId, text, sender });
+  const createMessage = (chatId, text, sender, createdAt) => {
+    const result = createdAt 
+      ? insertMessageWithTime.run({ chat_id: chatId, text, sender, created_at: createdAt }) 
+      : insertMessage.run({ chat_id: chatId, text, sender });
+
     return result.lastInsertRowid;
   };
 

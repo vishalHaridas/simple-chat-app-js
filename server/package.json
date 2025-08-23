@@ -11,7 +11,12 @@
   },
   "jest": {
     "testEnvironment": "node",
-    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.js$",
+    "testMatch": [
+      "**/__tests__/**/*.test.js",
+      "**/__tests__/**/*.spec.js",
+      "**/?(*.)+(test|spec).js"
+    ],
+    "testPathIgnorePatterns": ["/__tests__/utils/"],
     "transform": {
       "^.+\\.js$": "babel-jest"
     }

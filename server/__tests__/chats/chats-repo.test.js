@@ -1,4 +1,5 @@
 import { initializeChatDB, createChatRepository } from '../../chats/chats-repo';
+import oneSecondIncrementedTime from '../utils/oneSecondIncrementedTime';
 
 describe('Chats Repository Wrappers', () => {
   let db;
@@ -9,17 +10,20 @@ describe('Chats Repository Wrappers', () => {
     repo = createChatRepository(db);
   });
 
+  let timeAfterOneSecond
   beforeEach(() => {
     db.exec('DELETE FROM messages');
     db.exec('DELETE FROM chats');
+    timeAfterOneSecond = oneSecondIncrementedTime()
   });
 
   afterAll(() => {
     db.close();
   });
 
+
   test('createChat returns a numeric ID', () => {
-    const chatId = repo.createChat('user1');
+    const chatId = repo.createChat('user1', timeAfterOneSecond());
     expect(typeof chatId).toBe('number');
     expect(chatId).toBeGreaterThan(0);
   });
@@ -32,19 +36,17 @@ describe('Chats Repository Wrappers', () => {
   });
 
   test('getLastMessageOfChat returns the last message inserted', async () => {
-    const chatId = repo.createChat('user1');
-    repo.createMessage(chatId, 'first', 'bot');
-    await new Promise(resolve => setTimeout(resolve, 1000)); 
-    repo.createMessage(chatId, 'second', 'bot');
+    const chatId = repo.createChat('user1', timeAfterOneSecond());
+    repo.createMessage(chatId, 'first', 'bot', timeAfterOneSecond());
+    repo.createMessage(chatId, 'second', 'bot', timeAfterOneSecond());
     const lastMessage = repo.getLastMessageOfChat(chatId);
     expect(lastMessage).toMatchObject({ chat_id: chatId, text: 'second', sender: 'bot' });
   });
 
   test('getChatMessagesById returns all messages for a chat in descending order', async () => {
-    const chatId = repo.createChat('user1');
-    repo.createMessage(chatId, 'one', 'user');
-    await new Promise(resolve => setTimeout(resolve, 1000)); 
-    repo.createMessage(chatId, 'two', 'user');
+    const chatId = repo.createChat('user1', timeAfterOneSecond());
+    repo.createMessage(chatId, 'one', 'user', timeAfterOneSecond());
+    repo.createMessage(chatId, 'two', 'user', timeAfterOneSecond());
     const messages = repo.getChatMessagesById(chatId);
     expect(Array.isArray(messages)).toBe(true);
     expect(messages.length).toBe(2);
@@ -53,8 +55,8 @@ describe('Chats Repository Wrappers', () => {
   });
 
   test('getAllChats returns all chats', () => {
-    const chatId1 = repo.createChat('user1');
-    const chatId2 = repo.createChat('user2');
+    const chatId1 = repo.createChat('user1', timeAfterOneSecond());
+    const chatId2 = repo.createChat('user2', timeAfterOneSecond());
     const chats = repo.getAllChats();
     expect(Array.isArray(chats)).toBe(true);
     expect(chats.map(c => c.id)).toEqual(expect.arrayContaining([chatId1, chatId2]));
