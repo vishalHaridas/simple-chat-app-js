@@ -1,4 +1,5 @@
 import { createKVMemorySQLRepo, initializeKVMemoryDB } from '../../../features/memory/key_value/kv-memory-sql-repo';
+import oneSecondIncrementedTime from '../../utils/oneSecondIncrementedTime';
 
 describe('Key Value SQL memory repo', () => {
 
@@ -10,8 +11,11 @@ describe('Key Value SQL memory repo', () => {
     repo = createKVMemorySQLRepo(db);
   });
 
+  let timeAfterOneSecond
   beforeEach(() => {
     db.exec('DELETE FROM mem_kv');
+
+    timeAfterOneSecond = oneSecondIncrementedTime(new Date())
   });
 
   afterAll(() => {
@@ -19,7 +23,7 @@ describe('Key Value SQL memory repo', () => {
   });
   
   it('should write into sql db as expected', () => {
-    const result = repo.writeKV('user1', 'key1', 'value1');
+    const result = repo.writeKV('user1', 'key1', 'value1', timeAfterOneSecond());
     expect(result.changes).toBe(1);
 
     const items = repo.listKV('user1');
@@ -28,8 +32,8 @@ describe('Key Value SQL memory repo', () => {
   });
 
   it('should update existing key on writeKV', () => {
-    repo.writeKV('user1', 'key1', 'value1');
-    const result = repo.writeKV('user1', 'key1', 'value2');
+    repo.writeKV('user1', 'key1', 'value1', timeAfterOneSecond());
+    const result = repo.writeKV('user1', 'key1', 'value2', timeAfterOneSecond()); // update
     expect(result.changes).toBe(1); // 1 row updated
     const items = repo.listKV('user1');
     expect(items.length).toBe(1);
@@ -43,8 +47,8 @@ describe('Key Value SQL memory repo', () => {
   });
 
   it('should listKV return only items for given user', () => {
-    repo.writeKV('user1', 'key1', 'value1');
-    repo.writeKV('user2', 'key2', 'value2');  
+    repo.writeKV('user1', 'key1', 'value1', timeAfterOneSecond());
+    repo.writeKV('user2', 'key2', 'value2', timeAfterOneSecond());
     const itemsUser1 = repo.listKV('user1');
     expect(itemsUser1.length).toBe(1);
     expect(itemsUser1[0]).toMatchObject({ key: 'key1', value: 'value1' });
@@ -54,7 +58,7 @@ describe('Key Value SQL memory repo', () => {
   });
 
   it('should remove key on deleteKV', () => {
-    repo.writeKV('user1', 'key1', 'value1');
+    repo.writeKV('user1', 'key1', 'value1', timeAfterOneSecond());
     const result = repo.deleteKV('user1', 'key1');
     expect(result.changes).toBe(1);
     const items = repo.listKV('user1');
