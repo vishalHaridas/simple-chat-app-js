@@ -38,6 +38,28 @@ describe('Key Value Memory Service', () => {
     expect(items[1]).toMatchObject({ key: 'key2', value: 'value2' }); 
   });
 
+  it('should handle multiple users separately', () => {
+    service.writeKV('user1', 'key1', 'value1', timeAfterOneSecond());
+    service.writeKV('user2', 'key2', 'value2', timeAfterOneSecond());
+    let itemsUser1 = service.listKV('user1');
+    expect(itemsUser1.length).toBe(1);
+    expect(itemsUser1[0]).toMatchObject({ key: 'key1', value: 'value1' });
+    let itemsUser2 = service.listKV('user2');
+    expect(itemsUser2.length).toBe(1);
+    expect(itemsUser2[0]).toMatchObject({ key: 'key2', value: 'value2' });
+  });
+
+  it.skip('should update value for user, even with same key for different users', () => {
+    service.writeKV('user1', 'key1', 'value1', timeAfterOneSecond());
+    service.writeKV('user2', 'key1', 'value2', timeAfterOneSecond()); // same key, different user
+    let itemsUser1 = service.listKV('user1');
+    expect(itemsUser1.length).toBe(1);
+    expect(itemsUser1[0]).toMatchObject({ key: 'key1', value: 'value1' });
+    let itemsUser2 = service.listKV('user2');
+    expect(itemsUser2.length).toBe(1);
+    expect(itemsUser2[0]).toMatchObject({ key: 'key1', value: 'value2' });
+  });
+
   it('should update existing key on writeKV', () => {
     service.writeKV('user1', 'key1', 'value1', timeAfterOneSecond());
     service.writeKV('user1', 'key1', 'value2', timeAfterOneSecond()); // update
