@@ -1,6 +1,14 @@
-export const createEpisodicMemoryService = (epiMemoryRepo) => {
-  const writeEpisode = (user_id, text, createdAt) => epiMemoryRepo.writeEpisode(user_id, text, createdAt);
-  const recentEpisodes = (user_id, limit = 5) => epiMemoryRepo.recentEpisodes(user_id, limit);
+import { tryCatchSync, assumeOk } from "../../../utils/result";
 
-  return { writeEpisode, recentEpisodes };
-}
+export const createEpisodicMemoryService = (epiMemoryRepo) => {
+  const writeEpisode = (user_id, text, createdAt) =>
+    assumeOk(epiMemoryRepo.writeEpisode(user_id, text, createdAt));
+
+  const recentEpisodes = (user_id, limit = 5) =>
+    assumeOk(epiMemoryRepo.recentEpisodes(user_id, limit));
+
+  return {
+    writeEpisode: tryCatchSync(writeEpisode),
+    recentEpisodes: tryCatchSync(recentEpisodes)
+  };
+};

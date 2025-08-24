@@ -1,4 +1,4 @@
-import { createEpiMemorySQLRepo, initializeKVMemoryDB } from '../../../features/memory/episode/epi-memory-sql-repo';
+import { createEpiMemorySQLRepo, initializeEpisodeMemoryDB } from '../../../features/memory/episode/epi-memory-sql-repo';
 import { createEpisodicMemoryService } from '../../../features/memory/episode/epi-memory-service';
 
 import oneSecondIncrementedTime from '../../utils/oneSecondIncrementedTime';
@@ -10,7 +10,7 @@ describe('Episodic Memory Service', () => {
   let service;
 
   beforeAll(() => {
-    db = initializeKVMemoryDB(true);
+    db = initializeEpisodeMemoryDB(true);
     repo = createEpiMemorySQLRepo(db);
     service = createEpisodicMemoryService(repo);
   });
@@ -27,8 +27,9 @@ describe('Episodic Memory Service', () => {
   });
 
   it('should write an episode for a user', () => {
-    const result = service.writeEpisode('user1', 'This is an episode.', timeAfterOneSecond());
-    expect(result).toBeDefined();
+    const resultResult = service.writeEpisode('user1', 'This is an episode.', timeAfterOneSecond());
+    expect(resultResult.ok).toBe(true);
+    const result = resultResult.value;
     expect(result.changes).toBe(1);
 
     const row = db.prepare('SELECT * FROM mem_epi WHERE user_id = ?').get('user1');
@@ -41,7 +42,9 @@ describe('Episodic Memory Service', () => {
     service.writeEpisode('user1', 'Episode 2', timeAfterOneSecond());
     service.writeEpisode('user1', 'Episode 3', timeAfterOneSecond());
 
-    const episodes = service.recentEpisodes('user1', 3);
+    const episodesResult = service.recentEpisodes('user1', 3);
+    expect(episodesResult.ok).toBe(true);
+    const episodes = episodesResult.value;
     expect(episodes.length).toBe(3);
     expect(episodes[0].text).toBe('Episode 3');
     expect(episodes[1].text).toBe('Episode 2');
@@ -53,7 +56,9 @@ describe('Episodic Memory Service', () => {
       service.writeEpisode('user1', `Episode ${i}`, timeAfterOneSecond());
     }
 
-    const episodes = service.recentEpisodes('user1', 5);
+    const episodesResult = service.recentEpisodes('user1', 5);
+    expect(episodesResult.ok).toBe(true);
+    const episodes = episodesResult.value;
     expect(episodes.length).toBe(5);
     expect(episodes[0].text).toBe('Episode 10');
     expect(episodes[4].text).toBe('Episode 6');

@@ -47,4 +47,6 @@ export const createMemoryRouter = (keyValueService, episodicService, userId) => 
       res.status(500).json({ error: 'Failed to list memory', message: error.message });
     }
   });
+
+  return router;
 }

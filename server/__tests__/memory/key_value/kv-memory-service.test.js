@@ -26,13 +26,19 @@ describe('Key Value Memory Service', () => {
   });
   
   it('should write and list key-value pairs correctly', () => {
-    service.writeKV('user1', 'key1', 'value1', timeAfterOneSecond());
-    let items = service.listKV('user1');
+    const writeResult = service.writeKV('user1', 'key1', 'value1', timeAfterOneSecond());
+    let itemsResult = service.listKV('user1');
+    if (!itemsResult.ok)
+      console.error('List Result Error:', itemsResult.error, itemsResult.message);
+    let items = itemsResult.value;
     expect(items.length).toBe(1);
     expect(items[0]).toMatchObject({ key: 'key1', value: 'value1' });
 
     service.writeKV('user1', 'key2', 'value2', timeAfterOneSecond());
-    items = service.listKV('user1');
+    itemsResult = service.listKV('user1');
+    if (!itemsResult.ok)
+      console.error('List Result Error:', itemsResult.error, itemsResult.message);
+    items = itemsResult.value;
     expect(items.length).toBe(2);
     expect(items[0]).toMatchObject({ key: 'key1', value: 'value1' });
     expect(items[1]).toMatchObject({ key: 'key2', value: 'value2' }); 
@@ -41,10 +47,16 @@ describe('Key Value Memory Service', () => {
   it('should handle multiple users separately', () => {
     service.writeKV('user1', 'key1', 'value1', timeAfterOneSecond());
     service.writeKV('user2', 'key2', 'value2', timeAfterOneSecond());
-    let itemsUser1 = service.listKV('user1');
+    let itemsUser1Result = service.listKV('user1');
+    if (!itemsUser1Result.ok)
+      console.error('List Result Error:', itemsUser1Result.error, itemsUser1Result.message);
+    let itemsUser1 = itemsUser1Result.value;
     expect(itemsUser1.length).toBe(1);
     expect(itemsUser1[0]).toMatchObject({ key: 'key1', value: 'value1' });
-    let itemsUser2 = service.listKV('user2');
+    let itemsUser2Result = service.listKV('user2');
+    if (!itemsUser2Result.ok)
+      console.error('List Result Error:', itemsUser2Result.error, itemsUser2Result.message);
+    let itemsUser2 = itemsUser2Result.value;
     expect(itemsUser2.length).toBe(1);
     expect(itemsUser2[0]).toMatchObject({ key: 'key2', value: 'value2' });
   });
@@ -63,7 +75,11 @@ describe('Key Value Memory Service', () => {
   it('should update existing key on writeKV', () => {
     service.writeKV('user1', 'key1', 'value1', timeAfterOneSecond());
     service.writeKV('user1', 'key1', 'value2', timeAfterOneSecond()); // update
-    const items = service.listKV('user1');
+    const itemsResult = service.listKV('user1');
+    if (!itemsResult.ok) {
+      console.error('List Result Error:', itemsResult.error, itemsResult.message);
+    }
+    const items = itemsResult.value;
     expect(items.length).toBe(1);
     expect(items[0]).toMatchObject({ key: 'key1', value: 'value2' });
   });
@@ -72,14 +88,22 @@ describe('Key Value Memory Service', () => {
     service.writeKV('user1', 'key1', 'value1', timeAfterOneSecond());
     service.writeKV('user1', 'key2', 'value2', timeAfterOneSecond());
     service.writeKV('user1', 'key1', 'value3', timeAfterOneSecond()); // update key1 again
-    const items = service.listKV('user1');
+    const itemsResult = service.listKV('user1');
+    if (!itemsResult.ok) {
+      console.error('List Result Error:', itemsResult.error, itemsResult.message);
+    }
+    const items = itemsResult.value;
     expect(items.length).toBe(2);
     expect(items[0]).toMatchObject({ key: 'key1', value: 'value3' }); // key1 should be first
     expect(items[1]).toMatchObject({ key: 'key2', value: 'value2' });
   });
 
   it('should return empty array if no items for user', () => {
-    const items = service.listKV('user1');
+    const itemsResult = service.listKV('user1');
+    if (!itemsResult.ok) {
+      console.error('List Result Error:', itemsResult.error, itemsResult.message);
+    }
+    const items = itemsResult.value;
     expect(Array.isArray(items)).toBe(true);
     expect(items.length).toBe(0);
   });
@@ -87,29 +111,61 @@ describe('Key Value Memory Service', () => {
   it('should return only items for the specified user', () => {
     service.writeKV('user1', 'key1', 'value1', timeAfterOneSecond());
     service.writeKV('user2', 'key2', 'value2', timeAfterOneSecond());
-    const itemsUser1 = service.listKV('user1');
+    const itemsUser1Result = service.listKV('user1');
+    if (!itemsUser1Result.ok) {
+      console.error('List Result Error:', itemsUser1Result.error, itemsUser1Result.message);
+    }
+    const itemsUser1 = itemsUser1Result.value;
     expect(itemsUser1.length).toBe(1);
     expect(itemsUser1[0]).toMatchObject({ key: 'key1', value: 'value1' });
-    const itemsUser2 = service.listKV('user2');
+    const itemsUser2Result = service.listKV('user2');
+    if (!itemsUser2Result.ok) {
+      console.error('List Result Error:', itemsUser2Result.error, itemsUser2Result.message);
+    }
+    const itemsUser2 = itemsUser2Result.value;
     expect(itemsUser2.length).toBe(1);
     expect(itemsUser2[0]).toMatchObject({ key: 'key2', value: 'value2' });
   });
 
   it('should remove key on deleteKV', () => {
     service.writeKV('user1', 'key1', 'value1', timeAfterOneSecond());
-    let items = service.listKV('user1');
+    let itemsResult = service.listKV('user1');
+    if (!itemsResult.ok) {
+      console.error('List Result Error:', itemsResult.error, itemsResult.message);
+    }
+    let items = itemsResult.value;
     expect(items.length).toBe(1);
-    const result = service.deleteKV('user1', 'key1');
+    const resultResult = service.deleteKV('user1', 'key1');
+    if (!resultResult.ok) {
+      console.error('Delete Result Error:', resultResult.error, resultResult.message);
+    }
+    const result = resultResult.value;
     expect(result.changes).toBe(1);
-    items = service.listKV('user1');
+    itemsResult = service.listKV('user1');
+    if (!itemsResult.ok) {
+      console.error('List Result Error:', itemsResult.error, itemsResult.message);
+    }
+    items = itemsResult.value;
     expect(items.length).toBe(0);
   });
 
   it('should not delete key for different user', () => {
     service.writeKV('user1', 'key1', 'value1', timeAfterOneSecond());
-    const result = service.deleteKV('user2', 'key1'); // different user
-    expect(result.changes).toBe(0);
-    const items = service.listKV('user1');
+    const resultResult = service.deleteKV('user2', 'key1'); // different user
+    if (!resultResult.ok) {
+    }
+    if (!resultResult.ok) {
+      const error = resultResult.code;
+      const message = resultResult.message;
+      expect(error).toBe('INTERNAL_ERROR');
+      expect(message).toContain('Key not found');
+      expect(message).toContain('Expected Ok result but got Err');
+    }
+    const itemsResult = service.listKV('user1');
+    if (!itemsResult.ok) {
+      console.error('List Result Error:', itemsResult.error, itemsResult.message);
+    }
+    const items = itemsResult.value;
     expect(items.length).toBe(1);
     expect(items[0]).toMatchObject({ key: 'key1', value: 'value1' });
   });

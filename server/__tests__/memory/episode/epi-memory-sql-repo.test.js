@@ -1,5 +1,6 @@
-import { createEpiMemorySQLRepo, initializeKVMemoryDB } from '../../../features/memory/episode/epi-memory-sql-repo';
+import { createEpiMemorySQLRepo, initializeEpisodeMemoryDB } from '../../../features/memory/episode/epi-memory-sql-repo';
 import oneSecondIncrementedTime from '../../utils/oneSecondIncrementedTime';
+import { assumeOk } from '../../../utils/result';
 
 describe('Episodic Memory SQL repo', () => {
 
@@ -7,7 +8,7 @@ describe('Episodic Memory SQL repo', () => {
   let repo;
 
   beforeAll(() => {
-    db = initializeKVMemoryDB(true);
+    db = initializeEpisodeMemoryDB(true);
     repo = createEpiMemorySQLRepo(db);
   });
 
@@ -23,11 +24,11 @@ describe('Episodic Memory SQL repo', () => {
   });
   
   it('should write episode and retrieve recent episodes in order', () => {
-    repo.writeEpisode('user1', 'Episode 1', timeAfterOneSecond());
-    repo.writeEpisode('user1', 'Episode 2', timeAfterOneSecond());
-    repo.writeEpisode('user1', 'Episode 3', timeAfterOneSecond());
+    assumeOk(repo.writeEpisode('user1', 'Episode 1', timeAfterOneSecond()));
+    assumeOk(repo.writeEpisode('user1', 'Episode 2', timeAfterOneSecond()));
+    assumeOk(repo.writeEpisode('user1', 'Episode 3', timeAfterOneSecond()));
 
-    const episodes = repo.recentEpisodes('user1', 2);
+    const episodes = assumeOk(repo.recentEpisodes('user1', 2));
     expect(episodes.length).toBe(2);
     expect(episodes[0].text).toBe('Episode 3');
     expect(episodes[1].text).toBe('Episode 2');
@@ -35,17 +36,17 @@ describe('Episodic Memory SQL repo', () => {
 
   it('should limit the number of recent episodes returned', () => {
     for (let i = 1; i <= 10; i++) {
-      repo.writeEpisode('user1', `Episode ${i}`, timeAfterOneSecond());
+      assumeOk(repo.writeEpisode('user1', `Episode ${i}`, timeAfterOneSecond()));
     }
 
-    const episodes = repo.recentEpisodes('user1', 5);
+    const episodes = assumeOk(repo.recentEpisodes('user1', 5));
     expect(episodes.length).toBe(5);
     expect(episodes[0].text).toBe('Episode 10');
     expect(episodes[4].text).toBe('Episode 6');
   });
 
   it('should return empty array if no episodes for user', () => {
-    const episodes = repo.recentEpisodes('user2', 5);
+    const episodes = assumeOk(repo.recentEpisodes('user2', 5));
     expect(Array.isArray(episodes)).toBe(true);
     expect(episodes.length).toBe(0);
   });
