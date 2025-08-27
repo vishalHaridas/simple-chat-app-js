@@ -7,6 +7,35 @@ import memory from './features/memory/memory.js';
 import { providerCall } from './features/providers/index.js';
 import { createMemoryRouter } from './features/memory/index.js';
 
+import { createKVMemoryService } from '../memory/key_value/kv-memory-service';
+import { createEpisodicMemoryService } from '../memory/episode/epi-memory-service';
+import { createEpiMemorySQLRepo, initializeEpisodeMemoryDB } from '../memory/episode/epi-memory-sql-repo';
+import { createKVMemorySQLRepo, initializeKVMemoryDB } from '../memory/key_value/kv-memory-sql-repo';
+
+
+export const createMemoryComponents = ({ isTesting = false } = {}) => {
+  // Initialize databases
+  const kvDb = initializeKVMemoryDB(isTesting);
+  const epiDb = initializeEpisodeMemoryDB(isTesting);
+  // Create repositories
+  const kvRepo = createKVMemorySQLRepo(kvDb);
+  const epiRepo = createEpiMemorySQLRepo(epiDb);
+  // Create services
+  const kvService = createKVMemoryService(kvRepo);
+  const epiService = createEpisodicMemoryService(epiRepo);
+
+  // Create facade
+  const memoryFacade = createMemoryFacade(kvService, epiService);
+
+  // Graceful shutdown function
+  const shutdown = () => {
+    kvDb.close();
+    epiDb.close();
+  };
+
+  return { kvDb, epiDb, kvRepo, epiRepo, kvService, epiService, memoryFacade, shutdown };
+};
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
