@@ -45,4 +45,15 @@ const assumeOk = (result) => {
   return result.value;
 }
 
-export { Ok, Err, map, chain, tryCatchSync, tryCatchAsync, assumeOk };
+const assumeOKOrDefault = (result, fn) => 
+  result.ok ? result.value : fn();
+
+const unwrapErr = (result) => {
+  if (result.ok) {
+    throw new Error('Called unwrapErr on an Ok result');
+  }
+  return { code: result.code, message: result.message };
+};
+
+
+export { Ok, Err, map, chain, tryCatchSync, tryCatchAsync, assumeOk, unwrapErr };
