@@ -1,4 +1,6 @@
 # Simple Chat App with LLM
+> **⏸️ Paused:**
+>Learning `effect.js` for writing robust code
 
 A barebones chat application to understand the basics of LLMs. This project consists of:
 - **Client**: React + Vite frontend (`llm-chat/`)
