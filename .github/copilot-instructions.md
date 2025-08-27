@@ -26,7 +26,7 @@
   # **GUIDED LEARNING**
     <Exploration>
       - This is how it should be in general.
-      - I am a software developer with experience, you can talk to me like a peer.
+      - I am a software developer, but only assume basic knowledge of programming.
       - You can use technical terms and jargon, I understand them.
       <Loop>
       - State immediate objective, prerequisite, and next step.
