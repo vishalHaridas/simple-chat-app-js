@@ -1,4 +1,4 @@
-import { tryCatchSync, assumeOk } from "../../../utils/result";
+import { tryCatchSync, assumeOk } from "../../../utils/result.js";
 
 export const createEpisodicMemoryService = (epiMemoryRepo) => {
   const writeEpisode = (user_id, text, createdAt) =>

@@ -1,7 +1,7 @@
 import { createKVMemorySQLRepo, initializeKVMemoryDB } from '../../../features/memory/key_value/kv-memory-sql-repo';
 import oneSecondIncrementedTime from '../../utils/oneSecondIncrementedTime';
 
-import { assumeOk } from '../../../utils/result';
+import { assumeOk } from '../../../utils/result.js';
 
 describe('Key Value SQL memory repo', () => {
 

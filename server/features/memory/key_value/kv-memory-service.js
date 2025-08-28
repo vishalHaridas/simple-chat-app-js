@@ -1,4 +1,4 @@
-import { tryCatchSync, assumeOk } from "../../../utils/result";
+import { tryCatchSync, assumeOk } from "../../../utils/result.js";
 
 export const createKVMemoryService = (kvMemoryRepo) => {
   const writeKV = (user_id, key, value, createdAt) => {

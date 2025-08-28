@@ -1,4 +1,4 @@
-import { Ok, Err } from '../../utils/result';
+import { Ok, Err } from '../../utils/result.js';
 /**
  * Creates a memory facade for managing user memory.
  * @param {Object} kvService 
@@ -104,7 +104,7 @@ export const createMemoryFacade = (kvService, episodicService) => {
    */
   const executeCommand = (userId, command, payload) => {
     switch (command) {
-      case 'remember':
+      case '/remember':
         const memoryType = kvOrEpisodic(command, payload);
         if (memoryType === 'kv') {
           const kv = parseKVPayload(payload);
@@ -119,11 +119,11 @@ export const createMemoryFacade = (kvService, episodicService) => {
           return Ok({ message: 'Noted!' });
         }
         break;
-      case 'forget':
+      case '/forget':
         const key = payload.trim();
         kvService.deleteKV(userId, key);
         return Ok({ message: `Forgot ${key}` });
-      case 'list':
+      case '/list':
         const items = kvService.listKV(userId);
         return Ok({ message: `Memory items: ${items.map(item => `${item.key}=${item.value}`).join(', ')}` });
       default:
@@ -131,8 +131,29 @@ export const createMemoryFacade = (kvService, episodicService) => {
     }
   }
 
+  const listKV = (userId) => {
+    const kvListResult = kvService.listKV(userId);
+    if (!kvListResult.ok) {
+      return Err('kv_list_error', 'Failed to list key-value memory');
+    };
+
+    return Ok(kvListResult.value);
+  }
+
+  const recentEpisodes = (userId, limit = 5) => {
+    const epiListResult = episodicService.listEpisodes(userId, limit);
+    if (!epiListResult.ok) {
+      return Err('episodic_list_error', 'Failed to list episodic memory');
+    };
+
+    return Ok(epiListResult.value);
+  }
+
   return {
     parseSlashCommand,
-    executeCommand
+    executeCommand,
+
+    listKV,
+    recentEpisodes
   };
 }

@@ -1,11 +1,11 @@
 import Database from "better-sqlite3";
-import { Ok, Err, assumeOk } from "../../../utils/result"
+import { Ok, Err, assumeOk } from "../../../utils/result.js";
 
 export const createKVMemorySQLRepo = (db) => {
   // on conflict of key, update the value and updated_at with passed in created_at
   const upsertKV = db.prepare(`
     INSERT INTO mem_kv(user_id, key, value, created_at) VALUES (@user_id, @key, @value, @created_at)
-    ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.created_at
+    ON CONFLICT(user_id, key) DO UPDATE SET value=excluded.value, updated_at= daretime('now')
   `);
 
   const delKV = db.prepare(`DELETE FROM mem_kv WHERE key=@key AND user_id=@user_id`);
@@ -64,8 +64,8 @@ export const initializeKVMemoryDB = (isTesting = false) => {
       user_id TEXT NOT NULL,
       key TEXT NOT NULL UNIQUE,
       value TEXT NOT NULL,
-      created_at DATETIME,
-      updated_at DATETIME 
+      created_at DATETIME NOT NULL,
+      updated_at DATETIME NOT NULL
     );
   `);
 

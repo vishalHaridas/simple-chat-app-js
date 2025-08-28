@@ -1,6 +1,6 @@
 import { createEpiMemorySQLRepo, initializeEpisodeMemoryDB } from '../../../features/memory/episode/epi-memory-sql-repo';
 import oneSecondIncrementedTime from '../../utils/oneSecondIncrementedTime';
-import { assumeOk } from '../../../utils/result';
+import { assumeOk } from '../../../utils/result.js';
 
 describe('Episodic Memory SQL repo', () => {
 

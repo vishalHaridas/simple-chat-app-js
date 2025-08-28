@@ -18,7 +18,7 @@ const openrouterAPI = async (payload, { signal = {} }) => {
 }
 
 const lmstudioAPI = async (payload, {signal} = {}) => {
-  console.log(`LMStudio API Call`);
+  console.log(`Provider layer is making API Call`);
 
   const client = new LMStudioClient();
   const model = await client.llm.model(payload.model);
