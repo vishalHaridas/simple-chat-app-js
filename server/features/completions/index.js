@@ -38,8 +38,8 @@ export const createConversationsService = (memoryFacade, provider, USER_ID) => {
     const kvResult = memoryFacade.listKV(USER_ID);
     const epiResult = memoryFacade.recentEpisodes(USER_ID, 5);
 
-    const kv = kvResult.ok() ? kvResult.value : [];
-    const epi = epiResult.ok() ? epiResult.value : [];
+    const kv = kvResult.ok ? kvResult.value : [];
+    const epi = epiResult.ok ? epiResult.value : [];
 
     // Can be moved to service: buildMemoryContext
     const memoryContext = [
@@ -61,13 +61,13 @@ export const createConversationsService = (memoryFacade, provider, USER_ID) => {
 
     const SYSTEM_PROMPT = assumeOk(buildSystemPromptWithMemory());
 
-    const upStream = await provider.call({ 
+    const upStream = await provider({
       model: model,
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         ...messages.map(msg => ({
-          role: msg.role || 'user', 
-          content: msg.content || msg.text 
+          role: msg.role || 'user',
+          content: msg.content || msg.text
         })),
       ],
       max_tokens: -1,
@@ -81,6 +81,7 @@ export const createConversationsService = (memoryFacade, provider, USER_ID) => {
       return Err('provider_error', `Failed to get completion from provider: ${errorData}`);
     }
 
+    console.log(`sending stream to handler in ${JSON.stringify(Ok(upStream))}`);
     return Ok(upStream);
   }
 
@@ -123,7 +124,7 @@ export const createConversationsHandler = async (completionService, req, res) =>
 
   const controller = new AbortController();
 
-  req.on('close', () => {
+  res.on('close', () => {
     controller.abort();
   });
 

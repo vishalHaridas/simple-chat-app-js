@@ -1,9 +1,9 @@
 import Database from "better-sqlite3";
-import { Ok, Err } from "../../../utils/result.js";
+import { Ok, Err, tryCatchSync } from "../../../utils/result.js";
 
 export const createEpiMemorySQLRepo = (db) => {
 
-  const insertEpi = db.prepare(`INSERT INTO mem_epi(user_id, text, created_at) VALUES (@user_id, @text, @created_at)`);
+  const insertEpi = db.prepare(`INSERT INTO mem_epi(user_id, text, created_at) VALUES (@user_id, @text, @createdAt)`);
   const recentEpi = db.prepare(`SELECT text FROM mem_epi WHERE user_id=@user_id ORDER BY created_at DESC LIMIT @limit`);
 
   const writeEpisode = (user_id, text, createdAt) => {

@@ -106,7 +106,7 @@ function App() {
       ]
 
       // Call the LLM provider
-      const response = await fetch('http://localhost:3001/api/chat/stream', {
+      const response = await fetch('http://localhost:3001/api/completions/stream', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

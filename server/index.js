@@ -3,7 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 
 dotenv.config();
-import { providerCall } from './features/providers/index.js';
+import providerCall from './features/providers/index.js';
 //import { createMemoryRouter } from './features/memory/index.js';
 import { createMemoryFacade } from './features/memory/command.js';
 
@@ -14,7 +14,7 @@ import { createKVMemorySQLRepo, initializeKVMemoryDB } from './features/memory/k
 import createConversationsRouter, { createConversationsService } from './features/completions/index.js';
 
 
-import { Ok, Err, tryCatchSync } from './utils/result.js'
+import { Ok, Err, tryCatchSync, unwrapErr } from './utils/result.js'
 
 
 // initializes memory components and returns them
@@ -31,8 +31,8 @@ export const createMemoryComponents = ({ isTesting = false } = {}) => {
   const memoryFacade = createMemoryFacade(kvService, epiService);
 
   const shutdown = () => {
-    const kvDbCloseResult = tryCatchSync(() => kvDb.close());
-    const epiDbCloseResult = tryCatchSync(() => epiDb.close());
+    const kvDbCloseResult = tryCatchSync(kvDb.close());
+    const epiDbCloseResult = tryCatchSync(epiDb.close());
     return [kvDbCloseResult, epiDbCloseResult];
   };
 
@@ -44,7 +44,7 @@ const USER_ID = 'default';
 const memoryComponents = createMemoryComponents({ isTesting: process.env.NODE_ENV === 'test' });
 const { memoryFacade } = memoryComponents;
 
-const completionsService = createConversationsService(memoryFacade, { providerCall }, USER_ID);
+const completionsService = createConversationsService(memoryFacade, providerCall, USER_ID);
 
 const app = express();
 const PORT = process.env.PORT || 3001;

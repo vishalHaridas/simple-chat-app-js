@@ -40,8 +40,8 @@ describe('Key Value Memory Service', () => {
       console.error('List Result Error:', itemsResult.error, itemsResult.message);
     items = itemsResult.value;
     expect(items.length).toBe(2);
-    expect(items[0]).toMatchObject({ key: 'key1', value: 'value1' });
-    expect(items[1]).toMatchObject({ key: 'key2', value: 'value2' }); 
+    expect(items[0]).toMatchObject({ key: 'key2', value: 'value2' }); 
+    expect(items[1]).toMatchObject({ key: 'key1', value: 'value1' });
   });
 
   it('should handle multiple users separately', () => {

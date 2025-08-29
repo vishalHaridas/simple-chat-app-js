@@ -38,7 +38,10 @@ const lmstudioAPI = async (payload, {signal} = {}) => {
         });
 
         for await (const chunk of prediction) {
-          if (signal?.aborted) break;
+          if (signal?.aborted) {
+            console.warn('Aborting LM Studio stream due to signal');
+            break;
+          }
 
           // LM Studio chunks can be strings or objects; normalize to text
           const piece =
@@ -47,8 +50,12 @@ const lmstudioAPI = async (payload, {signal} = {}) => {
             typeof chunk?.delta?.content === "string" ? chunk.delta.content :
             typeof chunk?.text === "string" ? chunk.text : "";
 
-          if (!piece) continue;
+          if (!piece){
+            console.warn(`Skipping empty chunk: ${JSON.stringify(chunk)}`);
+            continue;
+          }
 
+          console.log(`Sending Provider chunk: ${piece}`);
           const line = `data: ${JSON.stringify(asOpenAIChunk(piece))}\n\n`;
           controller.enqueue(new TextEncoder().encode(line));
         }
@@ -96,8 +103,8 @@ const mockAPI = async (_payload, { signal } = {}) => {
   return new Response(stream, { status: 200, statusText: "OK" });
 };
 
-export const providerCall = async (payload, opts = {}) => {
-  // console.log(`Provider Call:, payload = ${JSON.stringify(payload, null, 2)}, opts = ${JSON.stringify(opts, null, 2)}`);
+export default async (payload, opts = {}) => {
+  console.log(`Provider Call:, payload = ${JSON.stringify(payload, null, 2)}, opts = ${JSON.stringify(opts, null, 2)}`);
   const PROVIDER = process.env.LLM_PROVIDER || 'mock';
   switch (PROVIDER) {
     case 'openrouter':

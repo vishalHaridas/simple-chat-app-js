@@ -141,7 +141,7 @@ export const createMemoryFacade = (kvService, episodicService) => {
   }
 
   const recentEpisodes = (userId, limit = 5) => {
-    const epiListResult = episodicService.listEpisodes(userId, limit);
+    const epiListResult = episodicService.recentEpisodes(userId, limit);
     if (!epiListResult.ok) {
       return Err('episodic_list_error', 'Failed to list episodic memory');
     };
