@@ -33,6 +33,7 @@
       - HELP ME Micro-plan the next step. (See ResponseLength limits below)
       - Ask me to implement the next step.
       - Feedback on my implementation.
+        - CRITICAL: would the code build? (If not, why?) 
         - What I did well
         - What can be improved
         - Did I miss handling any potential errors
