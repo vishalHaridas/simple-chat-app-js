@@ -1,4 +1,4 @@
-import { Ok, Err } from '../../utils/result.js';
+import { Ok, Err, assumeOk } from '../../utils/result.js';
 /**
  * Creates a memory facade for managing user memory.
  * @param {Object} kvService 
@@ -52,10 +52,10 @@ export const createMemoryFacade = (kvService, episodicService) => {
    * const type = result.value; // 'kv'
    */
   const kvOrEpisodic = (command, payload) => {
-    if (command !== 'remember') {
-      return Err('invalid_command', 'Only remember command is supported for memory type detection');
+    if (command !== '/remember') {
+      return Err('invalid_command', `Only command containing 'remember' is detected`);
     }
-    return Ok(command === 'remember' && payload.includes('=') ? 'kv' : 'episodic');
+    return Ok(payload.includes('=') ? 'kv' : 'episodic');
   }
 
   /**
@@ -105,15 +105,15 @@ export const createMemoryFacade = (kvService, episodicService) => {
   const executeCommand = (userId, command, payload) => {
     switch (command) {
       case '/remember':
-        const memoryType = kvOrEpisodic(command, payload);
+        const memoryType = assumeOk(kvOrEpisodic(command, payload));
+        console.log(`memoryType: ${JSON.stringify(memoryType)}`);
         if (memoryType === 'kv') {
-          const kv = parseKVPayload(payload);
-          if (kv) {
-            kvService.writeKV(userId, kv.key, kv.value);
-            return Ok({ message: `Noted: ${kv.key} = ${kv.value}` });
-          } else {
-            return Err('invalid_format', 'Invalid format for remember command. Use key=value.');
-          }
+          const kvResult = parseKVPayload(payload);
+          if (!kvResult.ok) 
+            return kvResult; // which is an Err
+          const { key, value } = kvResult.value;
+          kvService.writeKV(userId, key, value);
+          return Ok({ message: `Noted: ${key} = ${value}` });
         } else if (memoryType === 'episodic') {
           episodicService.writeEpisode(userId, payload);
           return Ok({ message: 'Noted!' });
@@ -124,8 +124,11 @@ export const createMemoryFacade = (kvService, episodicService) => {
         kvService.deleteKV(userId, key);
         return Ok({ message: `Forgot ${key}` });
       case '/list':
-        const items = kvService.listKV(userId);
-        return Ok({ message: `Memory items: ${items.map(item => `${item.key}=${item.value}`).join(', ')}` });
+        const itemsResult = kvService.listKV(userId);
+        if (!itemsResult.ok) {
+          return Err('kv_list_error', 'Failed to list key-value memory');
+        }
+        return Ok({ message: `Memory items: ${itemsResult.value.map(item => `${item.key}=${item.value}`).join(', ')}` });
       default:
         return Err('unknown_command', `Unknown command: ${command}`);
     }

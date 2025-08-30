@@ -40,6 +40,8 @@ const lmstudioAPI = async (payload, {signal} = {}) => {
         for await (const chunk of prediction) {
           if (signal?.aborted) {
             console.warn('Aborting LM Studio stream due to signal');
+            prediction.cancel();
+            controller.close();
             break;
           }
 
@@ -55,7 +57,6 @@ const lmstudioAPI = async (payload, {signal} = {}) => {
             continue;
           }
 
-          console.log(`Sending Provider chunk: ${piece}`);
           const line = `data: ${JSON.stringify(asOpenAIChunk(piece))}\n\n`;
           controller.enqueue(new TextEncoder().encode(line));
         }
@@ -71,7 +72,8 @@ const lmstudioAPI = async (payload, {signal} = {}) => {
       }
     },
     cancel() {
-      // optional: close model stream if SDK supports it
+      console.log('Stream cancelled by the client');
+      controller.close();
     }
   });
 
@@ -104,7 +106,6 @@ const mockAPI = async (_payload, { signal } = {}) => {
 };
 
 export default async (payload, opts = {}) => {
-  console.log(`Provider Call:, payload = ${JSON.stringify(payload, null, 2)}, opts = ${JSON.stringify(opts, null, 2)}`);
   const PROVIDER = process.env.LLM_PROVIDER || 'mock';
   switch (PROVIDER) {
     case 'openrouter':

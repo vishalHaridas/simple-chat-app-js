@@ -1,7 +1,7 @@
 import { tryCatchSync, assumeOk } from "../../../utils/result.js";
 
 export const createKVMemoryService = (kvMemoryRepo) => {
-  const writeKV = (user_id, key, value, createdAt) => {
+  const writeKV = (user_id, key, value, createdAt = new Date().toISOString()) => {
     return assumeOk(kvMemoryRepo.writeKV(user_id, key, value, createdAt));
   };
 

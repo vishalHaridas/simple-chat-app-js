@@ -1,9 +1,6 @@
-import { Router } from 'express';
+import { Ok, Err, assumeOk } from '../../utils/result.js';
 
-import { Ok, Err, unwrapErr, assumeOk } from '../../utils/result.js';
-
-
-export const createConversationsService = (memoryFacade, provider, USER_ID) => {
+export default (memoryFacade, provider, USER_ID) => {
 
   // handle memory command
   /**
@@ -29,6 +26,8 @@ export const createConversationsService = (memoryFacade, provider, USER_ID) => {
     if (!memoryExecResult.ok){
       return memoryExecResult  // which is an err
     }
+
+    console.log(`Memory command executed: ${JSON.stringify(memoryExecResult)}`);
 
     return memoryExecResult // Ok(value: {message: "..."})
   }
@@ -81,90 +80,8 @@ export const createConversationsService = (memoryFacade, provider, USER_ID) => {
       return Err('provider_error', `Failed to get completion from provider: ${errorData}`);
     }
 
-    console.log(`sending stream to handler in ${JSON.stringify(Ok(upStream))}`);
     return Ok(upStream);
   }
 
   return { handleMemory, handleProviderCall };
 };
-
-// Request will use SSE
-export const createConversationsHandler = async (completionService, req, res) => {
-
-  res.set({
-    'Content-Type': 'text/event-stream',
-    'Cache-Control': 'no-cache',
-    'Connection': 'keep-alive',
-    'Access-Control-Allow-Origin': '*',
-  });
-  res.flushHeaders();
-
-  const { model, messages } = req.body;
-  if (!model || !messages || !Array.isArray(messages)) {
-    res.status(400).json({ error: 'Invalid request body. "model" and "messages" are required.' });
-    return;
-  }
-
-  // Check for memory command in the last message only
-  const lastMessage = messages[messages.length -1];
-  if (lastMessage?.content?.startsWith('/')) {
-    const memoryResult = completionService.handleMemory(lastMessage.content);
-    if (memoryResult.ok){
-      // write value and close sse if memory command 
-      res.write(`data: ${JSON.stringify({ message: memoryResult.value.message, done: true })}\n\n`);
-      res.end();
-      return;
-    } else {
-      // send error message and close sse
-      res.write(`data: ${JSON.stringify({ error: memoryResult.error, message: unwrapErr(memoryResult), done: true })}\n\n`);
-      res.end();
-      return;
-    }
-  }
-
-  const controller = new AbortController();
-
-  res.on('close', () => {
-    controller.abort();
-  });
-
-  const providerResult = await completionService.handleProviderCall(model, messages, controller);
-  if (!providerResult.ok){
-    res.write(`data: ${JSON.stringify({ error: providerResult.error, message: unwrapErr(providerResult), done: true })}\n\n`);
-    res.end();
-    return;
-  }
-
-  const upStream = providerResult.value;
-
-  const reader = upStream.body.getReader();
-  const decoder = new TextDecoder('utf-8');
-
-  let done = false;
-
-  while (!done) {
-    try {
-      const { value, done: readerDone } = await reader.read();
-      if (readerDone) break;
-      done = readerDone;
-      const chunk = decoder.decode(value, { stream: true });
-      // Forward chunk to client
-      res.write(chunk);
-    } catch (error) {
-      console.error('Error reading from provider stream:', error);
-      res.write(`data: ${JSON.stringify({ error: 'stream_error', message: 'Error reading from provider stream', done: true })}\n\n`);
-      break;
-    }
-  }
-
-  res.end();
-}
-
-export default function createConversationsRouter(conversationService, USER_ID) {
-  const router = Router();
-
-  router.post('/stream', (req, res) => createConversationsHandler(conversationService, req, res));
-
-  return router;
-}
-

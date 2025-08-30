@@ -1,7 +1,7 @@
 import { tryCatchSync, assumeOk } from "../../../utils/result.js";
 
 export const createEpisodicMemoryService = (epiMemoryRepo) => {
-  const writeEpisode = (user_id, text, createdAt) =>
+  const writeEpisode = (user_id, text, createdAt = new Date().toISOString()) => 
     assumeOk(epiMemoryRepo.writeEpisode(user_id, text, createdAt));
 
   const recentEpisodes = (user_id, limit = 5) =>

@@ -55,6 +55,7 @@ export const createKVMemorySQLRepo = (db) => {
 }
 
 export const initializeKVMemoryDB = (isTesting = false) => {
+  console.log(`Initializing KV Memory DB. isTesting=${isTesting}`);
   const db = isTesting ? new Database(':memory:') : new Database('memory.db');
 
   db.exec(`

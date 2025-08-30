@@ -23,7 +23,7 @@ describe('Episodic Memory SQL repo', () => {
     db.close();
   });
   
-  it.only('should write episode and retrieve recent episodes in order', () => {
+  it('should write episode and retrieve recent episodes in order', () => {
     assumeOk(repo.writeEpisode('user1', 'Episode 1', timeAfterOneSecond()));
     assumeOk(repo.writeEpisode('user1', 'Episode 2', timeAfterOneSecond()));
     assumeOk(repo.writeEpisode('user1', 'Episode 3', timeAfterOneSecond()));
