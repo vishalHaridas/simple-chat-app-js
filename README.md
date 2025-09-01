@@ -1,8 +1,8 @@
 # Simple Chat App with LLM
 
 A barebones chat application to understand the basics of LLMs. This project consists of:
-- **Client**: React + Vite frontend (`llm-chat/`)
-- **Server**: (Primary focus) Express.js backend that handles OpenRouter API calls (`server/`)
+- **Client** (`llm-chat/`): React + Vite frontend
+- **Server** (`server/`): (Primary focus) Express.js backend that handles OpenRouter API calls 
 
 ## Project Structure
 ```

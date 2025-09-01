@@ -1,13 +1,98 @@
 /* Chat App Styles */
 .chat-app {
   display: flex;
-  flex-direction: column;
+  flex-direction: row; /* changed to row to place sidebar */
   height: 100vh;
   width: 100%;
   background: #f5f5f5;
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Sidebar */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  background: #0f172a; /* slate-900 */
+  color: #e2e8f0; /* slate-200 */
+  transition: width 0.2s ease-in-out;
+  width: 280px;
+}
+.sidebar.collapsed {
+  width: 60px;
+}
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.icon-button {
+  background: transparent;
+  color: #e2e8f0;
+  border: 1px solid rgba(226,232,240,0.2);
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+}
+.sidebar-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  flex: 1;
+}
+.new-chat-button {
+  background: #22c55e; /* green-500 */
+  color: #052e16;
+  border: none;
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+.sidebar-list {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+.chat-item {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0.6rem 0.75rem;
+  background: transparent;
+  border: none;
+  color: inherit;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  cursor: pointer;
+}
+.chat-item.active {
+  background: rgba(148,163,184,0.15);
+}
+.chat-item:hover {
+  background: rgba(148,163,184,0.12);
+}
+.chat-item-title {
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.chat-item-meta {
+  font-size: 0.75rem;
+  color: #94a3b8; /* slate-400 */
+}
+
+/* Main chat area */
+.chat-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 .chat-header {
@@ -134,7 +219,12 @@
     height: 100vh;
     border-radius: 0;
   }
-  
+  .sidebar {
+    width: 220px;
+  }
+  .sidebar.collapsed {
+    width: 52px;
+  }
   .message {
     max-width: 85%;
   }
