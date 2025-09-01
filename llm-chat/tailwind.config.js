@@ -19,6 +19,7 @@ export default {
       md: '768px', // Screen type: Small laptops
       lg: '1024px', // Screen type: Desktops
       xl: '1280px', // Screen type: Large desktops
+      '2xl': '1536px', // Screen type: Extra large desktops
     },
   },
   plugins: [],
