@@ -1,39 +1,11 @@
-import { useState } from 'react'
+import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
 
 import './App.css'
 import { SidebarTrigger } from './components/ui/sidebar'
 
-type Message = { sender: 'user' | 'bot'; text: string }
-type Chat = { id: string; name: string; messages: Message[] }
-
-const useChats = (initialArr?: Message[]) => {
-  const [chats, setChats] = useState<Chat[]>(
-    (initialArr && [{ id: 'test', name: 'also test', messages: initialArr }]) ?? [
-      { id: 'temp', name: 'Temp chat', messages: [] },
-    ],
-  )
-
-  const addChat = (name: string) => {
-    const newChat = { id: Date.now().toString(), name, messages: [] }
-    setChats([...chats, newChat])
-  }
-
-  const deleteChat = (id: string) => {
-    setChats(chats.filter((chat) => chat.id !== id))
-  }
-
-  const addMessageToChat = (chatId: string, message: { sender: 'user' | 'bot'; text: string }) => {
-    setChats(
-      chats.map((chat) =>
-        chat.id === chatId ? { ...chat, messages: [...chat.messages, message] } : chat,
-      ),
-    )
-  }
-
-  return { chats, addChat, deleteChat, addMessageToChat }
-}
-
-const ChatBar = (props: { handleSendMessage: (e: string) => void }) => {
+type ChatBarProps = { handleSendMessage: (e: string) => void }
+const ChatBar = (props: ChatBarProps) => {
   const [chatInput, setChatInput] = useState<string>('')
   return (
     <form
@@ -69,26 +41,64 @@ const ChatBar = (props: { handleSendMessage: (e: string) => void }) => {
   )
 }
 
-function App() {
-  const exampleChatMessages: Message[] = [
-    { sender: 'bot', text: 'Hello! How can I assist you today?' },
-    { sender: 'user', text: 'Can you tell me a joke?' },
-    {
-      sender: 'bot',
-      text: 'Sure! Why did the scarecrow win an award? Because he was outstanding in his field!',
-    },
-  ]
-  const [selectedChatIndex, _] = useState(0)
-  const { chats, addMessageToChat } = useChats()
+type Message = { sender: 'user' | 'bot'; text: string }
+type Chat = { id: string; name: string; messages: Message[] }
 
+const ChatInterface = () => {
   const [stream, setStream] = useState<string | null>(null)
+  const [messageList, setMessageList] = useState<Message[]>([])
+
+  async function callLLMResponse() {
+    // const streamResp = await fetch('http://localhost:3001/api/test-stream', {
+    //   body: JSON.stringify({ messages: messageList }),
+    //   method: 'GET',
+    //   headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
+    // })
+
+    const streamResp = await fetch('http://localhost:3001/api/completions/test-stream', {
+      method: 'POST',
+    })
+
+    if (!streamResp.ok) throw new Error('Network response was not ok')
+    if (!streamResp.body) throw new Error('No response body')
+
+    const reader = streamResp.body.getReader()
+
+    const decoder = new TextDecoder('utf-8')
+    let done = false
+    let result = ''
+
+    while (!done) {
+      const { value, done: doneReading } = await reader.read()
+      done = doneReading
+      const chunkValue = decoder.decode(value)
+      result += chunkValue
+      setStream((prev) => (prev ? prev + chunkValue : chunkValue))
+    }
+
+    handleMessageSend('bot', result)
+
+    return result
+  }
+
+  const { isLoading, isError, error, refetch } = useQuery({
+    queryKey: ['currentChat'],
+    queryFn: callLLMResponse,
+    enabled: false,
+  })
+
+  const handleMessageSend = (sender: 'bot' | 'user', message: string) => {
+    setStream(null)
+    setMessageList((prev) => [...prev, { sender, text: message }])
+    if (sender === 'user') void refetch()
+  }
 
   const ChatMessages = () => {
     return (
       // This element must be flex-1 and overflow-y-auto
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto flex w-full max-w-3xl flex-col space-y-2 p-4">
-          {chats?.[selectedChatIndex].messages.map((msg, i) => (
+          {messageList.map((msg, i) => (
             <div
               key={i}
               className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
@@ -102,6 +112,27 @@ function App() {
               </div>
             </div>
           ))}
+          {isLoading && (
+            <div className="flex justify-start">
+              <div className="max-w-[80%] rounded-lg bg-gray-600 p-3 text-white md:max-w-[70%]">
+                Loading...
+              </div>
+            </div>
+          )}
+          {isError && (
+            <div className="flex justify-start">
+              <div className="max-w-[80%] rounded-lg bg-red-600 p-3 text-white md:max-w-[70%]">
+                {`Error fetching response: ${error instanceof Error ? error.message : 'Unknown error'}`}
+              </div>
+            </div>
+          )}
+          {stream && (
+            <div className="flex justify-start">
+              <div className="max-w-[80%] rounded-lg bg-gray-600 p-3 text-white md:max-w-[70%]">
+                {stream}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     )
@@ -119,9 +150,9 @@ function App() {
         <section className="mx-0 flex min-h-0 flex-1 flex-col bg-amber-100 md:mx-20 2xl:mx-80">
           <ChatMessages />
           <ChatBar
-            handleSendMessage={(value: string) =>
-              addMessageToChat(chats[0].id, { sender: 'user', text: value })
-            }
+            handleSendMessage={(value: string) => {
+              handleMessageSend('user', value)
+            }}
           />
         </section>
       </main>
@@ -129,6 +160,16 @@ function App() {
         This is a practice project
       </footer>
     </div>
+  )
+}
+
+function App() {
+  const queryClient = new QueryClient()
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ChatInterface />
+    </QueryClientProvider>
   )
 }
 
