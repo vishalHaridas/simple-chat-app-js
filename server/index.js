@@ -7,6 +7,7 @@ import providerCall from "./features/providers/index.js";
 import createMemoryComponents from "./features/memory/factory.js";
 import createConversationsRouter from "./features/conversations/index.js";
 import createConversationsService from "./features/conversations/service.js";
+import createTestConversationRouter from "./features/conversations/test-router.js";
 import { unwrapErr } from "./utils/result.js";
 
 const USER_ID = "default";
@@ -30,51 +31,10 @@ app.use(
   "/api/completions",
   createConversationsRouter(completionsService, USER_ID)
 );
+app.use("/api/completions", createTestConversationRouter());
 
 app.get("/health", (_, res) => {
   res.json({ status: "OK", message: "LLM Chat Server is running" });
-});
-
-// Test streaming endpoint
-/**
- * This endpoint simulates a streaming response by sending a series of messages at intervals.
- * It uses Server-Sent Events (SSE) to push updates to the client.
- * @example
- * curl -N http://localhost:3001/api/test-stream
- */
-app.get("/api/test-stream", (req, res) => {
-  res.set({
-    "Content-Type": "text/event-stream",
-    "Cache-Control": "no-cache",
-    Connection: "keep-alive",
-    "Access-Control-Allow-Origin": "*",
-  });
-
-  let counter = 0;
-  const interval = setInterval(() => {
-    if (counter < 5) {
-      res.write(
-        `data: ${JSON.stringify({
-          message: `Test message ${counter + 1}`,
-          counter,
-        })}\n\n`
-      );
-      counter++;
-    } else {
-      res.write(
-        `data: ${JSON.stringify({
-          message: "Stream complete",
-          done: true,
-        })}\n\n`
-      );
-      clearInterval(interval);
-      res.end();
-    }
-  }, 1000);
-
-  req.on("close", () => {
-    clearInterval(interval);
-  });
 });
 
 // Start server
