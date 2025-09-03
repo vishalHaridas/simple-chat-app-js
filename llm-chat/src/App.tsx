@@ -1,6 +1,6 @@
 import { useState } from 'react'
+
 import './App.css'
-import { Button } from './components/ui/button'
 import { SidebarTrigger } from './components/ui/sidebar'
 
 type Message = { sender: 'user' | 'bot'; text: string }
@@ -8,7 +8,9 @@ type Chat = { id: string; name: string; messages: Message[] }
 
 const useChats = (initialArr?: Message[]) => {
   const [chats, setChats] = useState<Chat[]>(
-    (initialArr && [{ id: 'test', name: 'also test', messages: initialArr }]) ?? [],
+    (initialArr && [{ id: 'test', name: 'also test', messages: initialArr }]) ?? [
+      { id: 'temp', name: 'Temp chat', messages: [] },
+    ],
   )
 
   const addChat = (name: string) => {
@@ -76,14 +78,17 @@ function App() {
       text: 'Sure! Why did the scarecrow win an award? Because he was outstanding in his field!',
     },
   ]
-  const { chats, addMessageToChat } = useChats(exampleChatMessages)
+  const [selectedChatIndex, _] = useState(0)
+  const { chats, addMessageToChat } = useChats()
+
+  const [stream, setStream] = useState<string | null>(null)
 
   const ChatMessages = () => {
     return (
       // This element must be flex-1 and overflow-y-auto
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto flex w-full max-w-3xl flex-col space-y-2 p-4">
-          {chats?.[0].messages.map((msg, i) => (
+          {chats?.[selectedChatIndex].messages.map((msg, i) => (
             <div
               key={i}
               className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}

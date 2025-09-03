@@ -1,11 +1,9 @@
+import { Calendar, Home, Inbox, Search, Settings } from 'lucide-react'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
 import './index.css'
 import App from './App.tsx'
-
-import { Calendar, Home, Inbox, Search, Settings } from 'lucide-react'
-
 import {
   Sidebar,
   SidebarContent,
@@ -17,15 +15,6 @@ import {
   SidebarMenuItem,
   SidebarProvider,
 } from './components/ui/sidebar.tsx'
-
-// const AppSiderbar = () => {
-//   return (
-//     <Sidebar>
-//       <SidebarHeader>Chats</SidebarHeader>
-//       <SidebarContent>{/* Sidebar content goes here */}</SidebarContent>
-//     </Sidebar>
-//   )
-// }
 
 // Menu items.
 const items = [
@@ -56,7 +45,7 @@ const items = [
   },
 ]
 
-const AppSidebar = () => {
+export const AppSidebar = () => {
   return (
     <Sidebar>
       <SidebarContent>
