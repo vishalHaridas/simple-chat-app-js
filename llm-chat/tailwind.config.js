@@ -1,3 +1,5 @@
+import tailwindcssAnimate from 'tailwindcss-animate'
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
@@ -22,5 +24,5 @@ export default {
       '2xl': '1536px', // Screen type: Extra large desktops
     },
   },
-  plugins: [],
+  plugins: [tailwindcssAnimate],
 }

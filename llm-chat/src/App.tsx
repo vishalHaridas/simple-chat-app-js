@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import './App.css'
+import { Button } from './components/ui/button'
+import { SidebarTrigger } from './components/ui/sidebar'
 
 type Message = { sender: 'user' | 'bot'; text: string }
 type Chat = { id: string; name: string; messages: Message[] }
@@ -103,9 +105,11 @@ function App() {
   return (
     <div className="flex h-screen w-full flex-col bg-slate-100">
       <nav className="flex flex-none items-center justify-center border-b border-gray-200 bg-white p-4">
+        <SidebarTrigger />
         <h1 className="text-xl font-bold">LLM Chat App</h1>
       </nav>
 
+      {/* Sidebar */}
       <main className="flex min-h-0 flex-1 flex-col bg-blue-50">
         <section className="mx-0 flex min-h-0 flex-1 flex-col bg-amber-100 md:mx-20 2xl:mx-80">
           <ChatMessages />
@@ -117,7 +121,7 @@ function App() {
         </section>
       </main>
       <footer className="flex w-full flex-none items-center justify-center border-t border-gray-200 bg-white py-2 text-center text-sm text-gray-500">
-        This is a practice project, and it can DEFINITELY make mistakes.
+        This is a practice project
       </footer>
     </div>
   )
