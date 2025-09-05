@@ -72,10 +72,10 @@ export const AppSidebar = () => {
 }
 
 createRoot(document.getElementById('root')!).render(
-  // <StrictMode>
-  <SidebarProvider>
-    <AppSidebar />
-    <App />
-  </SidebarProvider>,
-  // </StrictMode>,
+  <StrictMode>
+    <SidebarProvider>
+      <AppSidebar />
+      <App />
+    </SidebarProvider>
+  </StrictMode>,
 )
