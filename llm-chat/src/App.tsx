@@ -153,7 +153,7 @@ const ChatInterface = () => {
             >
               <div
                 className={`rounded-lg p-3 text-white ${
-                  msg.role === 'user' ? 'bg-blue-500' : 'bg-gray-600'
+                  msg.role === 'user' ? 'bg-blue-500' : 'bg-purple-700'
                 } max-w-[80%] md:max-w-[70%]`}
               >
                 {msg.content}
