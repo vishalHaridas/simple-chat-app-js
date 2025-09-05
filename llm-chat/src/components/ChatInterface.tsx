@@ -1,0 +1,50 @@
+import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
+
+import { SidebarTrigger } from '@/components/ui/sidebar'
+import callLLMResponse from '@/utils/api/callLLMResponse'
+import type { Message } from '@/utils/types'
+
+import ChatMessageInputBar from './ui/chatMessageInputBar'
+import ChatMessages from './ui/chatMessageList'
+
+const ChatInterface = () => {
+  const [stream, setStream] = useState<string>('')
+  const [messageList, setMessageList] = useState<Message[]>([])
+
+  const { isError, error } = useQuery({
+    queryKey: ['currentChat', messageList],
+    queryFn: () => callLLMResponse(messageList, setStream, handleMessageSend),
+    enabled: messageList.length > 0 && messageList[messageList.length - 1].role === 'user',
+  })
+
+  const handleMessageSend = (sender: 'assistant' | 'user', message: string) => {
+    setStream('')
+    setMessageList((prev) => [...prev, { role: sender, content: message }])
+  }
+
+  return (
+    <div className="flex h-screen w-full flex-col bg-slate-100">
+      <nav className="flex flex-none items-center justify-center border-b border-gray-200 bg-white p-4">
+        <SidebarTrigger />
+        <h1 className="text-xl font-bold">LLM Chat App</h1>
+      </nav>
+
+      <main className="flex min-h-0 flex-1 flex-col bg-blue-50">
+        <section className="mx-0 flex min-h-0 flex-1 flex-col bg-amber-100 md:mx-20 2xl:mx-80">
+          <ChatMessages messageList={messageList} isError={isError} error={error} stream={stream} />
+          <ChatMessageInputBar
+            handleSendMessage={(value: string) => {
+              handleMessageSend('user', value)
+            }}
+          />
+        </section>
+      </main>
+      <footer className="flex w-full flex-none items-center justify-center border-t border-gray-200 bg-white py-2 text-center text-sm text-gray-500">
+        This is a practice project
+      </footer>
+    </div>
+  )
+}
+
+export default ChatInterface
