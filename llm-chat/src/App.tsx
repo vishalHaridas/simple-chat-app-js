@@ -58,28 +58,51 @@ const ChatInterface = () => {
   const [stream, setStream] = useState<string | null>(null)
   const [messageList, setMessageList] = useState<Message[]>([])
 
+  /**
+   * Example chunk of data (with <think></think)
+   * data: {"choices":[{"delta":{"content":"<think>"},"finish_reason":null}]}
+   * data: {"choices":[{"delta":{"content":"\n\n"},"finish_reason":null}]}
+   * data: {"choices":[{"delta":{"content":"</think>"},"finish_reason":null}]}
+   * data: {"choices":[{"delta":{"content":"\n\n"},"finish_reason":null}]}
+   * data: {"choices":[{"delta":{"content":"Boy"},"finish_reason":null}]}
+   * data: {"choices":[{"delta":{},"finish_reason":"stop"}]}
+   * data: [DONE]
+   * data: end
+   */
+
   const parseStreamedChunk = (chunk: string): string => {
+    //return Ok({value: string, status: "err" | "done" | "continue"})
+
+    type CompletionsObj = { choices: { delta: { content: string }; finish_reason: string }[] }
+
     try {
+      if (chunk === '[DONE]' || chunk === 'end') return ''
+
       const lines = chunk.split('\n').filter((line) => line.trim() !== '')
+      let parsedText = ''
+
       for (const line of lines) {
         if (line.startsWith('data: ')) {
           const jsonStr = line.replace('data: ', '').trim()
           if (jsonStr === '[DONE]') {
-            console.log('Stream finished')
             return ''
           }
-          const parsed: any = JSON.parse(jsonStr)
-          if (!parsed.choices || !Array.isArray(parsed.choices)) {
-            console.error('Invalid response format:', parsed)
-            return '...Error in response'
-          }
-          const content: string =
-            (parsed.choices?.[0]?.delta.content as string) ?? '....Something went wrong!'
+          const data: CompletionsObj = JSON.parse(jsonStr) as CompletionsObj
+          const content = data.choices[0].delta.content
+          const finishReason = data.choices[0].finish_reason
+
           if (content) {
-            return content
+            parsedText += content
+          }
+
+          if (finishReason === 'stop') {
+            return parsedText
           }
         }
       }
+
+      // partial line
+      return parsedText
     } catch (err) {
       console.error('Error parsing chunk:', err)
     }
