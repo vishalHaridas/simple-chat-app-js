@@ -4,14 +4,12 @@ import './App.css'
 
 import ChatInterface from './components/ChatInterface'
 
-function App() {
-  const queryClient = new QueryClient()
+const queryClient = new QueryClient()
 
-  return (
-    <QueryClientProvider client={queryClient}>
-      <ChatInterface />
-    </QueryClientProvider>
-  )
-}
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <ChatInterface />
+  </QueryClientProvider>
+)
 
 export default App
