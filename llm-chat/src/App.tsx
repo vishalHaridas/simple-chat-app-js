@@ -3,22 +3,27 @@ import { useEffect, useState } from 'react'
 
 import './App.css'
 import { SidebarTrigger } from './components/ui/sidebar'
+import { Button } from './components/ui/button'
 
 type ChatBarProps = { handleSendMessage: (e: string) => void }
 const ChatBar = (props: ChatBarProps) => {
   const [chatInput, setChatInput] = useState<string>('')
+  const handleChatSend = () => {
+    props.handleSendMessage(chatInput)
+    setChatInput('')
+  }
+
   return (
     <form
       className="w-full"
       onSubmit={(e) => {
         e.preventDefault()
-        props.handleSendMessage(chatInput)
+        handleChatSend()
       }}
       onKeyDown={(e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
           e.preventDefault()
-          props.handleSendMessage(chatInput)
-          setChatInput('')
+          handleChatSend()
         }
       }}
     >
@@ -32,32 +37,66 @@ const ChatBar = (props: ChatBarProps) => {
             onChange={(e) => setChatInput(e.target.value)}
             placeholder="Type your message..."
           />
-          <button className="float-right mt-2 rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600">
+          <Button
+            onClick={handleChatSend}
+            className="float-right mt-2 rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+          >
             Send
-          </button>
+          </Button>
         </div>
       </div>
     </form>
   )
 }
 
-type Message = { sender: 'user' | 'bot'; text: string }
+type Message = { role: 'user' | 'assistant'; content: string }
 type Chat = { id: string; name: string; messages: Message[] }
 
 const ChatInterface = () => {
+  const queryClient = useQueryClient()
+
   const [stream, setStream] = useState<string | null>(null)
   const [messageList, setMessageList] = useState<Message[]>([])
 
-  async function callLLMResponse() {
-    // const streamResp = await fetch('http://localhost:3001/api/test-stream', {
-    //   body: JSON.stringify({ messages: messageList }),
-    //   method: 'GET',
-    //   headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
-    // })
+  const parseStreamedChunk = (chunk: string): string => {
+    try {
+      const lines = chunk.split('\n').filter((line) => line.trim() !== '')
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const jsonStr = line.replace('data: ', '').trim()
+          if (jsonStr === '[DONE]') {
+            console.log('Stream finished')
+            return ''
+          }
+          const parsed: any = JSON.parse(jsonStr)
+          if (!parsed.choices || !Array.isArray(parsed.choices)) {
+            console.error('Invalid response format:', parsed)
+            return '...Error in response'
+          }
+          const content: string =
+            (parsed.choices?.[0]?.delta.content as string) ?? '....Something went wrong!'
+          if (content) {
+            return content
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error parsing chunk:', err)
+    }
+    return ''
+  }
 
-    const streamResp = await fetch('http://localhost:3001/api/completions/test-stream', {
+  async function callLLMResponse() {
+    const requestBody = { messages: messageList }
+    console.log('Calling LLM with messages:', requestBody)
+
+    const request = new Request('http://localhost:3001/api/completions/stream', {
       method: 'POST',
+      body: JSON.stringify(requestBody),
+      headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
     })
+    const streamResp = await fetch(request)
+    console.log('Fetch response:', streamResp)
 
     if (!streamResp.ok) throw new Error('Network response was not ok')
     if (!streamResp.body) throw new Error('No response body')
@@ -72,11 +111,14 @@ const ChatInterface = () => {
       const { value, done: doneReading } = await reader.read()
       done = doneReading
       const chunkValue = decoder.decode(value)
-      result += chunkValue
-      setStream((prev) => (prev ? prev + chunkValue : chunkValue))
+      const parsedChunk = parseStreamedChunk(chunkValue)
+      if (parsedChunk) {
+        setStream((prev) => (prev ? prev + parsedChunk : parsedChunk))
+      }
+      result += parsedChunk
     }
 
-    handleMessageSend('bot', result)
+    handleMessageSend('assistant', result)
 
     return result
   }
@@ -87,11 +129,17 @@ const ChatInterface = () => {
     enabled: false,
   })
 
-  const handleMessageSend = (sender: 'bot' | 'user', message: string) => {
+  const handleMessageSend = (sender: 'assistant' | 'user', message: string) => {
     setStream(null)
-    setMessageList((prev) => [...prev, { sender, text: message }])
-    if (sender === 'user') void refetch()
+    setMessageList((prev) => [...prev, { role: sender, content: message }])
   }
+
+  useEffect(() => {
+    if (messageList.length === 0) return
+    if (messageList[messageList.length - 1].role === 'assistant') return
+
+    void refetch()
+  }, [messageList])
 
   const ChatMessages = () => {
     return (
@@ -101,14 +149,14 @@ const ChatInterface = () => {
           {messageList.map((msg, i) => (
             <div
               key={i}
-              className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div
                 className={`rounded-lg p-3 text-white ${
-                  msg.sender === 'user' ? 'bg-blue-500' : 'bg-gray-600'
+                  msg.role === 'user' ? 'bg-blue-500' : 'bg-gray-600'
                 } max-w-[80%] md:max-w-[70%]`}
               >
-                {msg.text}
+                {msg.content}
               </div>
             </div>
           ))}

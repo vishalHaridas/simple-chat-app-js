@@ -3,30 +3,35 @@ import { LMStudioClient, Chat } from "@lmstudio/sdk";
 const openrouterAPI = async (payload, { signal = {} }) => {
   return new Response("Not implemented yet", { status: 501 });
 
-  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    signal,
-    headers: {
-      'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-      'HTTP-Referer': 'http://localhost:3000',
-      'X-Title': 'LLM Chat App',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(payload)
-  });
+  const response = await fetch(
+    "https://openrouter.ai/api/v1/chat/completions",
+    {
+      method: "POST",
+      signal,
+      headers: {
+        Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        "HTTP-Referer": "http://localhost:3000",
+        "X-Title": "LLM Chat App",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    }
+  );
   return response;
-}
+};
 
-const lmstudioAPI = async (payload, {signal} = {}) => {
-  console.log(`Provider layer is making API Call`);
+const lmstudioAPI = async (payload, { signal } = {}) => {
+  console.log(
+    `Provider layer is making API Call with payload: ${JSON.stringify(payload)}`
+  );
 
   const client = new LMStudioClient();
   const model = await client.llm.model(payload.model);
   const chat = Chat.from(payload.messages);
-  
-// OpenAI-style SSE envelope creator expected by your top-level reader
+
+  // OpenAI-style SSE envelope creator expected by your top-level reader
   const asOpenAIChunk = (text) => ({
-    choices: [{ delta: { content: text }, finish_reason: null }]
+    choices: [{ delta: { content: text }, finish_reason: null }],
   });
 
   const stream = new ReadableStream({
@@ -39,7 +44,7 @@ const lmstudioAPI = async (payload, {signal} = {}) => {
 
         for await (const chunk of prediction) {
           if (signal?.aborted) {
-            console.warn('Aborting LM Studio stream due to signal');
+            console.warn("Aborting LM Studio stream due to signal");
             prediction.cancel();
             controller.close();
             break;
@@ -47,12 +52,17 @@ const lmstudioAPI = async (payload, {signal} = {}) => {
 
           // LM Studio chunks can be strings or objects; normalize to text
           const piece =
-            typeof chunk === "string" ? chunk :
-            typeof chunk?.content === "string" ? chunk.content :
-            typeof chunk?.delta?.content === "string" ? chunk.delta.content :
-            typeof chunk?.text === "string" ? chunk.text : "";
+            typeof chunk === "string"
+              ? chunk
+              : typeof chunk?.content === "string"
+              ? chunk.content
+              : typeof chunk?.delta?.content === "string"
+              ? chunk.delta.content
+              : typeof chunk?.text === "string"
+              ? chunk.text
+              : "";
 
-          if (!piece){
+          if (!piece) {
             console.warn(`Skipping empty chunk: ${JSON.stringify(chunk)}`);
             continue;
           }
@@ -62,9 +72,13 @@ const lmstudioAPI = async (payload, {signal} = {}) => {
         }
 
         // send final markers
-        controller.enqueue(new TextEncoder().encode(
-          `data: ${JSON.stringify({ choices: [{ delta: {}, finish_reason: "stop" }] })}\n\n`
-        ));
+        controller.enqueue(
+          new TextEncoder().encode(
+            `data: ${JSON.stringify({
+              choices: [{ delta: {}, finish_reason: "stop" }],
+            })}\n\n`
+          )
+        );
         controller.enqueue(new TextEncoder().encode(`data: [DONE]\n\n`));
         controller.close();
       } catch (err) {
@@ -72,9 +86,9 @@ const lmstudioAPI = async (payload, {signal} = {}) => {
       }
     },
     cancel() {
-      console.log('Stream cancelled by the client');
+      console.log("Stream cancelled by the client");
       controller.close();
-    }
+    },
   });
 
   return new Response(stream, { status: 200 });
@@ -88,33 +102,41 @@ const mockAPI = async (_payload, { signal } = {}) => {
       const send = () => {
         if (signal?.aborted) return controller.close();
         if (i < words.length) {
-          const chunk = { choices: [{ delta: { content: words[i++] + " " }, finish_reason: null }] };
-          controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(chunk)}\n\n`));
+          const chunk = {
+            choices: [
+              { delta: { content: words[i++] + " " }, finish_reason: null },
+            ],
+          };
+          controller.enqueue(
+            new TextEncoder().encode(`data: ${JSON.stringify(chunk)}\n\n`)
+          );
           setTimeout(send, 250);
         } else {
-          controller.enqueue(new TextEncoder().encode(
-            `data: ${JSON.stringify({ choices: [{ delta: {}, finish_reason: "stop" }] })}\n\n`
-          ));
+          controller.enqueue(
+            new TextEncoder().encode(
+              `data: ${JSON.stringify({
+                choices: [{ delta: {}, finish_reason: "stop" }],
+              })}\n\n`
+            )
+          );
           controller.enqueue(new TextEncoder().encode(`data: [DONE]\n\n`));
           controller.close();
         }
       };
       send();
-    }
+    },
   });
   return new Response(stream, { status: 200, statusText: "OK" });
 };
 
 export default async (payload, opts = {}) => {
-  const PROVIDER = process.env.LLM_PROVIDER || 'mock';
+  const PROVIDER = process.env.LLM_PROVIDER || "mock";
   switch (PROVIDER) {
-    case 'openrouter':
+    case "openrouter":
       return openrouterAPI(payload, opts);
-    case 'lmstudio':
+    case "lmstudio":
       return await lmstudioAPI(payload, opts);
     default:
       return await mockAPI(payload, opts);
   }
 };
-
-
