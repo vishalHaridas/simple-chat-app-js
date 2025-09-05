@@ -4,6 +4,7 @@ import { useState } from 'react'
 import './App.css'
 import type { Message } from '@/utils/types'
 
+import ChatMessageComponent from './components/ui/chatMessage'
 import { Button } from './components/ui/button'
 import { SidebarTrigger } from './components/ui/sidebar'
 import callLLMResponse from './utils/api/callLLMResponse'
@@ -73,32 +74,16 @@ const ChatInterface = () => {
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto flex w-full max-w-3xl flex-col space-y-2 p-4">
           {messageList.map((msg, i) => (
-            <div
-              key={i}
-              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`rounded-lg p-3 text-white ${
-                  msg.role === 'user' ? 'bg-blue-500' : 'bg-purple-700'
-                } max-w-[80%] md:max-w-[70%]`}
-              >
-                {msg.content}
-              </div>
-            </div>
+            <ChatMessageComponent key={i} message={msg} type={msg.role} />
           ))}
           {isError && (
-            <div className="flex justify-start">
-              <div className="max-w-[80%] rounded-lg bg-red-600 p-3 text-white md:max-w-[70%]">
-                {`Error fetching response: ${error instanceof Error ? error.message : 'Unknown error'}`}
-              </div>
-            </div>
+            <ChatMessageComponent
+              message={{ role: 'assistant', content: error.message }}
+              type="error"
+            />
           )}
           {stream.trim().length !== 0 && (
-            <div className="flex justify-start">
-              <div className="max-w-[80%] rounded-lg bg-gray-600 p-3 text-white md:max-w-[70%]">
-                {stream}
-              </div>
-            </div>
+            <ChatMessageComponent message={{ role: 'assistant', content: stream }} type="stream" />
           )}
         </div>
       </div>
