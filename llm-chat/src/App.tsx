@@ -53,8 +53,6 @@ type Message = { role: 'user' | 'assistant'; content: string }
 type Chat = { id: string; name: string; messages: Message[] }
 
 const ChatInterface = () => {
-  const queryClient = useQueryClient()
-
   const [stream, setStream] = useState<string | null>(null)
   const [messageList, setMessageList] = useState<Message[]>([])
 
