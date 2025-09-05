@@ -29,6 +29,10 @@ export default tseslint.config([
     },
     settings: {
       react: { version: 'detect' }, // let plugins detect React version
+      'import/resolver': {
+        node: { extensions: ['.js', '.jsx', '.ts', '.tsx'] },
+        typescript: { project: ['./tsconfig.app.json'] }, // use app tsconfig
+      },
     },
     rules: {
       // ---------- General code-quality ----------
