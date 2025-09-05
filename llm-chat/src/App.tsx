@@ -1,11 +1,12 @@
-import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
 
 import './App.css'
 import type { Message } from '@/utils/types'
 
 import { Button } from './components/ui/button'
 import { SidebarTrigger } from './components/ui/sidebar'
+import callLLMResponse from './utils/api/callLLMResponse'
 
 type ChatBarProps = { handleSendMessage: (e: string) => void }
 const ChatBar = (props: ChatBarProps) => {
@@ -51,118 +52,20 @@ const ChatBar = (props: ChatBarProps) => {
   )
 }
 
-type Message = { role: 'user' | 'assistant'; content: string }
-type Chat = { id: string; name: string; messages: Message[] }
-
 const ChatInterface = () => {
-  const [stream, setStream] = useState<string | null>(null)
+  const [stream, setStream] = useState<string>('')
   const [messageList, setMessageList] = useState<Message[]>([])
 
-  /**
-   * Example chunk of data (with <think></think)
-   * data: {"choices":[{"delta":{"content":"<think>"},"finish_reason":null}]}
-   * data: {"choices":[{"delta":{"content":"\n\n"},"finish_reason":null}]}
-   * data: {"choices":[{"delta":{"content":"</think>"},"finish_reason":null}]}
-   * data: {"choices":[{"delta":{"content":"\n\n"},"finish_reason":null}]}
-   * data: {"choices":[{"delta":{"content":"Boy"},"finish_reason":null}]}
-   * data: {"choices":[{"delta":{},"finish_reason":"stop"}]}
-   * data: [DONE]
-   * data: end
-   */
-
-  const parseStreamedChunk = (chunk: string): string => {
-    //return Ok({value: string, status: "err" | "done" | "continue"})
-
-    type CompletionsObj = { choices: { delta: { content: string }; finish_reason: string }[] }
-
-    try {
-      if (chunk === '[DONE]' || chunk === 'end') return ''
-
-      const lines = chunk.split('\n').filter((line) => line.trim() !== '')
-      let parsedText = ''
-
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const jsonStr = line.replace('data: ', '').trim()
-          if (jsonStr === '[DONE]') {
-            return ''
-          }
-          const data: CompletionsObj = JSON.parse(jsonStr) as CompletionsObj
-          const content = data.choices[0].delta.content
-          const finishReason = data.choices[0].finish_reason
-
-          if (content) {
-            parsedText += content
-          }
-
-          if (finishReason === 'stop') {
-            return parsedText
-          }
-        }
-      }
-
-      // partial line
-      return parsedText
-    } catch (err) {
-      console.error('Error parsing chunk:', err)
-    }
-    return ''
-  }
-
-  async function callLLMResponse() {
-    const requestBody = { messages: messageList }
-    console.log('Calling LLM with messages:', requestBody)
-
-    const request = new Request('http://localhost:3001/api/completions/stream', {
-      method: 'POST',
-      body: JSON.stringify(requestBody),
-      headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
-    })
-    const streamResp = await fetch(request)
-    console.log('Fetch response:', streamResp)
-
-    if (!streamResp.ok) throw new Error('Network response was not ok')
-    if (!streamResp.body) throw new Error('No response body')
-
-    const reader = streamResp.body.getReader()
-
-    const decoder = new TextDecoder('utf-8')
-    let done = false
-    let result = ''
-
-    while (!done) {
-      const { value, done: doneReading } = await reader.read()
-      done = doneReading
-      const chunkValue = decoder.decode(value)
-      const parsedChunk = parseStreamedChunk(chunkValue)
-      if (parsedChunk) {
-        setStream((prev) => (prev ? prev + parsedChunk : parsedChunk))
-      }
-      result += parsedChunk
-    }
-
-    handleMessageSend('assistant', result)
-
-    return result
-  }
-
-  const { isLoading, isError, error, refetch } = useQuery({
-    queryKey: ['currentChat'],
-    queryFn: callLLMResponse,
-    enabled: false,
+  const { isError, error } = useQuery({
+    queryKey: ['currentChat', messageList],
+    queryFn: () => callLLMResponse(messageList, setStream, handleMessageSend),
+    enabled: messageList.length > 0 && messageList[messageList.length - 1].role === 'user',
   })
 
   const handleMessageSend = (sender: 'assistant' | 'user', message: string) => {
-    setStream(null)
+    setStream('')
     setMessageList((prev) => [...prev, { role: sender, content: message }])
   }
-
-  useEffect(() => {
-    if (messageList.length === 0) return
-    if (messageList[messageList.length - 1].role === 'assistant') return
-
-    void refetch()
-  }, [messageList])
 
   const ChatMessages = () => {
     return (
@@ -183,13 +86,6 @@ const ChatInterface = () => {
               </div>
             </div>
           ))}
-          {isLoading && (
-            <div className="flex justify-start">
-              <div className="max-w-[80%] rounded-lg bg-gray-600 p-3 text-white md:max-w-[70%]">
-                Loading...
-              </div>
-            </div>
-          )}
           {isError && (
             <div className="flex justify-start">
               <div className="max-w-[80%] rounded-lg bg-red-600 p-3 text-white md:max-w-[70%]">
@@ -197,7 +93,7 @@ const ChatInterface = () => {
               </div>
             </div>
           )}
-          {stream && (
+          {stream.trim().length !== 0 && (
             <div className="flex justify-start">
               <div className="max-w-[80%] rounded-lg bg-gray-600 p-3 text-white md:max-w-[70%]">
                 {stream}
@@ -216,7 +112,6 @@ const ChatInterface = () => {
         <h1 className="text-xl font-bold">LLM Chat App</h1>
       </nav>
 
-      {/* Sidebar */}
       <main className="flex min-h-0 flex-1 flex-col bg-blue-50">
         <section className="mx-0 flex min-h-0 flex-1 flex-col bg-amber-100 md:mx-20 2xl:mx-80">
           <ChatMessages />
