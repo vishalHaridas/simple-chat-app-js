@@ -2,8 +2,8 @@ import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tan
 import { useEffect, useState } from 'react'
 
 import './App.css'
-import { SidebarTrigger } from './components/ui/sidebar'
 import { Button } from './components/ui/button'
+import { SidebarTrigger } from './components/ui/sidebar'
 
 type ChatBarProps = { handleSendMessage: (e: string) => void }
 const ChatBar = (props: ChatBarProps) => {
