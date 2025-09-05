@@ -42,7 +42,7 @@ export default (res) => {
   };
 
   const endStream = () => {
-    writeSSE("event: end\n\n");
+    writeSSE("data: end\n\n");
     res.end();
   };
 
