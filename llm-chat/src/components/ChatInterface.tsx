@@ -10,70 +10,58 @@ import ChatMessageInputBar from './ui/chatMessageInputBar'
 import ChatMessages from './ui/chatMessageList'
 import { currentChatIdAtom } from '@/utils/store/jotai'
 
-const chatMessagesMock: Chat[] = [
-  {
-    id: '1',
-    messages: [
-      { role: 'user', content: 'Hello, how are you?' },
-      { role: 'assistant', content: 'I am fine, thank you!' },
-      { role: 'user', content: 'What is the capital of France?' },
-      { role: 'assistant', content: 'The capital of France is Paris.' },
-    ],
-    name: 'Chat 1',
-  },
-  {
-    id: '2',
-    messages: [
-      { role: 'user', content: 'What is 2 + 2?' },
-      { role: 'assistant', content: '2 + 2 is 4.' },
-    ],
-    name: 'Chat 2',
-  },
-  {
-    id: '3',
-    messages: [
-      { role: 'user', content: 'Tell me a joke.' },
-      {
-        role: 'assistant',
-        content: 'Why did the scarecrow win an award? Because he was outstanding in his field!',
-      },
-    ],
-    name: 'Chat 3',
-  },
-]
-
 const ChatInterface = () => {
   console.log('Rendering ChatInterface component')
 
   const currentChatID = useAtomValue(currentChatIdAtom)
-
-  const [messageList, setMessageList] = useState<Message[]>([])
+  const [_, setMessageList] = useState<Message[]>([])
 
   console.log('Current Chat ID:', currentChatID)
 
-  useEffect(() => {
-    console.log('Current Chat ID changed:', currentChatID)
-    console.log('SelectedChats:', messageList)
-
-    if (currentChatID) {
-      const selectedChat = chatMessagesMock.find((chat) => chat.id === currentChatID)
-      if (selectedChat) {
-        setMessageList(selectedChat.messages)
-      } else {
-        setMessageList([])
-      }
-    } else {
-      setMessageList([])
+  const fetchChatById = async (chatId: string) => {
+    const url = `http://localhost:3001/api/chats/${chatId}`
+    const request = new Request(`http://localhost:3001/api/chats/${chatId}`, { method: 'GET' })
+    const response = await fetch(request)
+    if (!response.ok) {
+      console.error('Error fetching chat by ID:', response.statusText)
+      throw new Error('Network response was not ok')
     }
-  }, [currentChatID])
+    return response.json()
+  }
 
-  const hasMessages = messageList.length > 0
-  const lastMessageIsUser = hasMessages && messageList[messageList.length - 1].role === 'user'
+  const {
+    data: messageListData,
+    isError: messageListIsError,
+    error: messageListError,
+  } = useQuery({
+    queryKey: ['currentChat', currentChatID],
+    queryFn: () => fetchChatById(currentChatID!),
+    enabled: !!currentChatID,
+    select: (data) => {
+      console.log('Raw data from fetchChatById:', data)
+      if (Array.isArray(data)) {
+        const messages = data.map((item: any) => ({
+          role: item.sender === 'user' ? 'user' : 'assistant',
+          content: item.text,
+        }))
+        console.log('Transformed messages:', messages)
+        return messages
+      } else {
+        console.warn('Unexpected data format:', data)
+        return []
+      }
+    },
+    initialData: [],
+  })
+
+  const hasMessages = messageListData.length > 0
+  const lastMessageIsUser =
+    hasMessages && messageListData[messageListData.length - 1].role === 'user'
   // Only call the LLM API when the last message is from the user
   const { data, isError, error } = useQuery({
-    queryKey: ['currentChat', messageList],
+    queryKey: ['currentChat', messageListData],
     queryFn: experimental_streamedQuery({
-      queryFn: () => callLLMGenerator(messageList),
+      queryFn: () => callLLMGenerator(messageListData),
     }),
     enabled: hasMessages && lastMessageIsUser,
   })
@@ -95,10 +83,10 @@ const ChatInterface = () => {
         <h1 className="text-xl font-bold">LLM Chat App</h1>
       </nav>
 
-      <main className="flex min-h-0 flex-1 flex-col bg-blue-50">
-        <section className="mx-0 flex min-h-0 flex-1 flex-col bg-amber-100 md:mx-20 2xl:mx-80">
+      <main className="flex min-h-0 flex-1 flex-col">
+        <section className="mx-0 flex min-h-0 flex-1 flex-col md:mx-20 2xl:mx-80">
           <ChatMessages
-            messageList={messageList}
+            messageList={messageListData ?? []}
             isError={isError}
             error={error}
             stream={unwrappedStream}
