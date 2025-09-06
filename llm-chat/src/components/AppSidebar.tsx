@@ -1,4 +1,4 @@
-import { useAtom } from 'jotai'
+import { useAtom, type SetStateAction } from 'jotai'
 
 import {
   Sidebar,
@@ -11,23 +11,28 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar.tsx'
 import { currentChatIdAtom } from '@/utils/store/jotai'
+import { Button } from './ui/button'
 
 // Menu items.
 const items = [
   {
     title: 'New Chat',
     url: '#',
+    action: (fn: any) => fn,
   },
+]
+
+const mockChatList = [
+  { id: '1', title: 'Chat 1' },
+  { id: '2', title: 'Chat 2' },
+  { id: '3', title: 'Chat 3' },
 ]
 
 export const AppSidebar = () => {
   const [_, setCurrentChatId] = useAtom(currentChatIdAtom)
 
-  setCurrentChatId('123') // Example of setting the current chat ID
-
-  //can be an empty array
   const SideBarMenuChildrenChats = (props: { chatList: { id: string; title: string }[] }) => {
-    console.log('Chat List len:', props.chatList.length)
+    const [_, setCurrentChatId] = useAtom(currentChatIdAtom)
 
     if (props.chatList.length === 0) {
       return (
@@ -42,7 +47,9 @@ export const AppSidebar = () => {
         {props.chatList.map((chat) => (
           <SidebarMenuItem key={chat.id}>
             <SidebarMenuButton asChild>
-              <a href={`#chat/${chat.id}`}>{chat.title}</a>
+              <Button variant="link" onClick={() => setCurrentChatId(chat.id)}>
+                {chat.title}
+              </Button>
             </SidebarMenuButton>
           </SidebarMenuItem>
         ))}
@@ -59,9 +66,9 @@ export const AppSidebar = () => {
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <a href={item.url}>
+                    <Button variant={'ghost'} onClick={() => item.action(setCurrentChatId(null))}>
                       <span>{item.title}</span>
-                    </a>
+                    </Button>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -72,7 +79,7 @@ export const AppSidebar = () => {
           <SidebarGroupLabel>History</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SideBarMenuChildrenChats chatList={[]} />
+              <SideBarMenuChildrenChats chatList={mockChatList} />
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

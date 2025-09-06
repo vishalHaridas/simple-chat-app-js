@@ -1,21 +1,71 @@
 import { useQuery, experimental_streamedQuery } from '@tanstack/react-query'
-import { useAtom } from 'jotai'
-import { useState } from 'react'
+import { useAtom, useAtomValue } from 'jotai'
+import { useEffect, useState } from 'react'
 
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import callLLMGenerator from '@/utils/api/callLLMResponse'
-import type { Message } from '@/utils/types'
+import type { Chat, Message } from '@/utils/types'
 
 import ChatMessageInputBar from './ui/chatMessageInputBar'
 import ChatMessages from './ui/chatMessageList'
 import { currentChatIdAtom } from '@/utils/store/jotai'
 
+const chatMessagesMock: Chat[] = [
+  {
+    id: '1',
+    messages: [
+      { role: 'user', content: 'Hello, how are you?' },
+      { role: 'assistant', content: 'I am fine, thank you!' },
+      { role: 'user', content: 'What is the capital of France?' },
+      { role: 'assistant', content: 'The capital of France is Paris.' },
+    ],
+    name: 'Chat 1',
+  },
+  {
+    id: '2',
+    messages: [
+      { role: 'user', content: 'What is 2 + 2?' },
+      { role: 'assistant', content: '2 + 2 is 4.' },
+    ],
+    name: 'Chat 2',
+  },
+  {
+    id: '3',
+    messages: [
+      { role: 'user', content: 'Tell me a joke.' },
+      {
+        role: 'assistant',
+        content: 'Why did the scarecrow win an award? Because he was outstanding in his field!',
+      },
+    ],
+    name: 'Chat 3',
+  },
+]
+
 const ChatInterface = () => {
   console.log('Rendering ChatInterface component')
-  const [messageList, setMessageList] = useState<Message[]>([])
-  const [currentChatId] = useAtom(currentChatIdAtom)
 
-  console.log('Current Chat ID:', currentChatId)
+  const currentChatID = useAtomValue(currentChatIdAtom)
+
+  const [messageList, setMessageList] = useState<Message[]>([])
+
+  console.log('Current Chat ID:', currentChatID)
+
+  useEffect(() => {
+    console.log('Current Chat ID changed:', currentChatID)
+    console.log('SelectedChats:', messageList)
+
+    if (currentChatID) {
+      const selectedChat = chatMessagesMock.find((chat) => chat.id === currentChatID)
+      if (selectedChat) {
+        setMessageList(selectedChat.messages)
+      } else {
+        setMessageList([])
+      }
+    } else {
+      setMessageList([])
+    }
+  }, [currentChatID])
 
   const hasMessages = messageList.length > 0
   const lastMessageIsUser = hasMessages && messageList[messageList.length - 1].role === 'user'
