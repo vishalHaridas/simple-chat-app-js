@@ -1,8 +1,8 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, experimental_streamedQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import { SidebarTrigger } from '@/components/ui/sidebar'
-import callLLMResponse from '@/utils/api/callLLMResponse'
+import callLLMGenerator from '@/utils/api/callLLMResponse'
 import type { Message } from '@/utils/types'
 
 import ChatMessageInputBar from './ui/chatMessageInputBar'
@@ -15,11 +15,15 @@ const ChatInterface = () => {
   const hasMessages = messageList.length > 0
   const lastMessageIsUser = hasMessages && messageList[messageList.length - 1].role === 'user'
   // Only call the LLM API when the last message is from the user
-  const { isError, error } = useQuery({
+  const { data, isError, error } = useQuery({
     queryKey: ['currentChat', messageList],
-    queryFn: () => callLLMResponse(messageList, setStream, handleMessageSend),
+    queryFn: experimental_streamedQuery({
+      queryFn: () => callLLMGenerator(messageList),
+    }),
     enabled: hasMessages && lastMessageIsUser,
   })
+
+  console.log('Streamed data:', data)
 
   const handleMessageSend = (sender: 'assistant' | 'user', message: string) => {
     setStream('')
@@ -35,7 +39,12 @@ const ChatInterface = () => {
 
       <main className="flex min-h-0 flex-1 flex-col bg-blue-50">
         <section className="mx-0 flex min-h-0 flex-1 flex-col bg-amber-100 md:mx-20 2xl:mx-80">
-          <ChatMessages messageList={messageList} isError={isError} error={error} stream={stream} />
+          <ChatMessages
+            messageList={messageList}
+            isError={isError}
+            error={error}
+            stream={data?.flat().join('') ?? ''}
+          />
           <ChatMessageInputBar
             handleSendMessage={(value: string) => {
               handleMessageSend('user', value)

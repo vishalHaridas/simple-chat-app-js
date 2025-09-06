@@ -51,7 +51,45 @@ const parseStreamedChunk = (chunk: string): string => {
   return ''
 }
 
-export default async (
+export default (messageList: Message[]) => {
+  return {
+    async *[Symbol.asyncIterator]() {
+      const requestBody = { messages: messageList }
+      console.log('Calling Generator LLM with messages:', requestBody)
+
+      const request = new Request('http://localhost:3001/api/completions/stream', {
+        method: 'POST',
+        body: JSON.stringify(requestBody),
+        headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
+      })
+      const streamResp = await fetch(request)
+      console.log('Fetch response:', streamResp)
+
+      if (!streamResp.ok) throw new Error('Network response was not ok')
+      if (!streamResp.body) throw new Error('No response body')
+
+      const reader = streamResp.body.getReader()
+
+      const decoder = new TextDecoder('utf-8')
+      let done = false
+
+      while (!done) {
+        const { value, done: doneReading } = await reader.read()
+        done = doneReading
+        const chunkValue = decoder.decode(value)
+        const parsedChunk = parseStreamedChunk(chunkValue)
+        if (parsedChunk) {
+          yield parsedChunk
+        }
+      }
+    },
+  }
+}
+
+/**
+ * @deprecated Use callLLMGenerator instead
+ */
+export const callLLMResponse = async (
   messageList: Message[],
   setStream: React.Dispatch<React.SetStateAction<string>>,
   handleMessageSend: (sender: 'assistant' | 'user', message: string) => void,
