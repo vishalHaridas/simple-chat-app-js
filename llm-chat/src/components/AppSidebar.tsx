@@ -19,10 +19,37 @@ const items = [
     url: '#',
   },
 ]
+
 export const AppSidebar = () => {
   const [_, setCurrentChatId] = useAtom(currentChatIdAtom)
 
   setCurrentChatId('123') // Example of setting the current chat ID
+
+  //can be an empty array
+  const SideBarMenuChildrenChats = (props: { chatList: { id: string; title: string }[] }) => {
+    console.log('Chat List len:', props.chatList.length)
+
+    if (props.chatList.length === 0) {
+      return (
+        <SidebarMenuItem>
+          <p>No previous chats</p>
+        </SidebarMenuItem>
+      )
+    }
+
+    return (
+      <>
+        {props.chatList.map((chat) => (
+          <SidebarMenuItem key={chat.id}>
+            <SidebarMenuButton asChild>
+              <a href={`#chat/${chat.id}`}>{chat.title}</a>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        ))}
+      </>
+    )
+  }
+
   return (
     <Sidebar>
       <SidebarContent>
@@ -45,11 +72,7 @@ export const AppSidebar = () => {
           <SidebarGroupLabel>History</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <a href="#">No previous chats</a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              <SideBarMenuChildrenChats chatList={[]} />
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
