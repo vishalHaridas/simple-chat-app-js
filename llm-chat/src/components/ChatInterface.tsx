@@ -9,7 +9,6 @@ import ChatMessageInputBar from './ui/chatMessageInputBar'
 import ChatMessages from './ui/chatMessageList'
 
 const ChatInterface = () => {
-  const [stream, setStream] = useState<string>('')
   const [messageList, setMessageList] = useState<Message[]>([])
 
   const hasMessages = messageList.length > 0
