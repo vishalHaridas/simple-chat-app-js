@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/sidebar.tsx'
 import { currentChatIdAtom } from '@/utils/store/jotai'
 import { Button } from './ui/button'
+import { useQuery } from '@tanstack/react-query'
 
 // Menu items.
 const items = [
@@ -31,10 +32,29 @@ const mockChatList = [
 export const AppSidebar = () => {
   const [_, setCurrentChatId] = useAtom(currentChatIdAtom)
 
+  const fetchChatList = async (): Promise<{ id: string; title: string }[]> => {
+    const request = new Request('http://localhost:3001/api/chats/', { method: 'GET' })
+    const response = await fetch(request)
+    if (!response.ok) {
+      throw new Error('Network response was not ok')
+    }
+    return response.json()
+  }
+
+  const { data, isError, error } = useQuery({
+    queryKey: ['chatList'],
+    queryFn: fetchChatList,
+    select: (data) => data.map((chat: any) => ({ id: chat.id, title: chat.title })),
+  })
+
+  console.log('Chat list data:', data, isError, error)
+
   const SideBarMenuChildrenChats = (props: { chatList: { id: string; title: string }[] }) => {
     const [_, setCurrentChatId] = useAtom(currentChatIdAtom)
 
-    if (props.chatList.length === 0) {
+    console.log('passed in chatList', props.chatList)
+
+    if (!props.chatList || props.chatList.length === 0) {
       return (
         <SidebarMenuItem>
           <p>No previous chats</p>
@@ -79,7 +99,7 @@ export const AppSidebar = () => {
           <SidebarGroupLabel>History</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SideBarMenuChildrenChats chatList={mockChatList} />
+              <SideBarMenuChildrenChats chatList={data ?? []} />
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
