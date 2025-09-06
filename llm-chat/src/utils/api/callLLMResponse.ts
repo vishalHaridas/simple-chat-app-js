@@ -79,7 +79,10 @@ export default (messageList: Message[]) => {
         const chunkValue = decoder.decode(value)
         const parsedChunk = parseStreamedChunk(chunkValue)
         if (parsedChunk) {
-          yield parsedChunk
+          yield { done: false, value: parsedChunk }
+        }
+        if (done) {
+          yield { done: true, value: '' }
         }
       }
     },

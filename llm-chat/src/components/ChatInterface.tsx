@@ -23,11 +23,14 @@ const ChatInterface = () => {
     enabled: hasMessages && lastMessageIsUser,
   })
 
-  console.log('Streamed data:', data)
-
-  const handleMessageSend = (sender: 'assistant' | 'user', message: string) => {
-    setStream('')
+  const handleMessageSend = (sender: 'assistant' | 'user', message: string) =>
     setMessageList((prev) => [...prev, { role: sender, content: message }])
+
+  const unwrappedStream = data?.map((chunk) => chunk.value).join('') ?? ''
+  const lastChunk = data?.[data?.length - 1]
+  if (lastChunk && lastChunk.done) {
+    const fullResponse = unwrappedStream
+    handleMessageSend('assistant', fullResponse)
   }
 
   return (
@@ -43,7 +46,7 @@ const ChatInterface = () => {
             messageList={messageList}
             isError={isError}
             error={error}
-            stream={data?.flat().join('') ?? ''}
+            stream={unwrappedStream}
           />
           <ChatMessageInputBar
             handleSendMessage={(value: string) => {
