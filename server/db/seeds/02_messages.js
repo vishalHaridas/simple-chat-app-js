@@ -3,78 +3,98 @@
  * @returns { Promise<void> }
  */
 export async function seed(knex) {
-  await knex("messages").del();
+  const calculateDateWithOffset = (offset) => {
+    // Date starts from Jan 1, 2024 @ 12:00 PM + offset days
+    const date = new Date("2024-01-01T12:00:00");
+    date.setDate(date.getDate() + offset);
+    return date.toISOString().replace("T", " ").substring(0, 19);
+  };
 
-  await knex("messages").insert([
+  const chatId1Messages = [
     {
-      id: 1,
       chat_id: 1,
       text: "Hello Alice!",
-      sender: "user1",
-      created_at: "2023-10-01 10:01:00",
+      sender: "user",
+      created_at: calculateDateWithOffset(1 + 0),
     },
     {
-      id: 2,
       chat_id: 1,
       text: "Hi there!",
-      sender: "Alice",
-      created_at: "2023-10-01 10:02:00",
+      sender: "assistant",
+      created_at: calculateDateWithOffset(1 + 1),
     },
     {
-      id: 3,
       chat_id: 1,
       text: "How are you?",
-      sender: "user1",
-      created_at: "2023-10-01 10:03:00",
+      sender: "user",
+      created_at: calculateDateWithOffset(1 + 2),
     },
     {
-      id: 4,
       chat_id: 1,
       text: "I am good, thanks!",
-      sender: "Alice",
-      created_at: "2023-10-01 10:04:00",
+      sender: "assistant",
+      created_at: calculateDateWithOffset(1 + 3),
     },
+  ];
+
+  const chatId2Messages = [
     {
-      id: 5,
       chat_id: 2,
       text: "Let's discuss the project.",
-      sender: "user2",
-      created_at: "2023-10-02 11:01:00",
+      sender: "user",
+      created_at: calculateDateWithOffset(2 + 0),
     },
     {
-      id: 6,
       chat_id: 2,
       text: "Sure, what's the agenda?",
-      sender: "Bob",
-      created_at: "2023-10-02 11:05:00",
+      sender: "assistant",
+      created_at: calculateDateWithOffset(2 + 1),
     },
     {
-      id: 7,
       chat_id: 2,
       text: "We need to finalize the requirements.",
-      sender: "user2",
-      created_at: "2023-10-02 11:10:00",
+      sender: "user",
+      created_at: calculateDateWithOffset(2 + 2),
     },
     {
-      id: 8,
+      chat_id: 2,
+      text: "Got it. I'll prepare the document.",
+      sender: "assistant",
+      created_at: calculateDateWithOffset(2 + 3),
+    },
+  ];
+
+  const chatId3Messages = [
+    {
       chat_id: 3,
       text: "Random chat starts here.",
-      sender: "user1",
-      created_at: "2023-10-03 12:01:00",
+      sender: "user",
+      created_at: calculateDateWithOffset(3 + 0),
     },
     {
-      id: 9,
       chat_id: 3,
       text: "Indeed it does!",
-      sender: "Charlie",
-      created_at: "2023-10-03 12:15:00",
+      sender: "assistant",
+      created_at: calculateDateWithOffset(3 + 1),
     },
     {
-      id: 10,
       chat_id: 3,
       text: "Let's keep it going.",
-      sender: "user1",
-      created_at: "2023-10-03 12:20:00",
+      sender: "user",
+      created_at: calculateDateWithOffset(3 + 2),
     },
+    {
+      chat_id: 3,
+      text: "Absolutely, I'm here for it.",
+      sender: "assistant",
+      created_at: calculateDateWithOffset(3 + 3),
+    },
+  ];
+
+  await knex("messages").del();
+  await knex("messages").insert([
+    ...chatId1Messages,
+    ...chatId2Messages,
+    ...chatId3Messages,
   ]);
 }
