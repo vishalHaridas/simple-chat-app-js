@@ -1,3 +1,5 @@
+import { useAtom } from 'jotai'
+
 import {
   Sidebar,
   SidebarContent,
@@ -8,6 +10,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar.tsx'
+import { currentChatIdAtom } from '@/utils/store/jotai'
 
 // Menu items.
 const items = [
@@ -17,6 +20,9 @@ const items = [
   },
 ]
 export const AppSidebar = () => {
+  const [_, setCurrentChatId] = useAtom(currentChatIdAtom)
+
+  setCurrentChatId('123') // Example of setting the current chat ID
   return (
     <Sidebar>
       <SidebarContent>

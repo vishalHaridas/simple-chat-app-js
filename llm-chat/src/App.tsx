@@ -1,4 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { Provider } from 'jotai'
 
 import './App.css'
 
@@ -10,10 +11,12 @@ const queryClient = new QueryClient()
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <SidebarProvider defaultOpen={false}>
-      <AppSidebar />
-      <ChatInterface />
-    </SidebarProvider>
+    <Provider>
+      <SidebarProvider defaultOpen={false}>
+        <AppSidebar />
+        <ChatInterface />
+      </SidebarProvider>
+    </Provider>
   </QueryClientProvider>
 )
 

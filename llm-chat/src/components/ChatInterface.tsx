@@ -1,4 +1,5 @@
 import { useQuery, experimental_streamedQuery } from '@tanstack/react-query'
+import { useAtom } from 'jotai'
 import { useState } from 'react'
 
 import { SidebarTrigger } from '@/components/ui/sidebar'
@@ -7,9 +8,14 @@ import type { Message } from '@/utils/types'
 
 import ChatMessageInputBar from './ui/chatMessageInputBar'
 import ChatMessages from './ui/chatMessageList'
+import { currentChatIdAtom } from '@/utils/store/jotai'
 
 const ChatInterface = () => {
+  console.log('Rendering ChatInterface component')
   const [messageList, setMessageList] = useState<Message[]>([])
+  const [currentChatId] = useAtom(currentChatIdAtom)
+
+  console.log('Current Chat ID:', currentChatId)
 
   const hasMessages = messageList.length > 0
   const lastMessageIsUser = hasMessages && messageList[messageList.length - 1].role === 'user'
