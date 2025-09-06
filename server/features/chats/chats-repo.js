@@ -4,7 +4,7 @@ import Database from "better-sqlite3";
  * Creates a chat repository for managing chat and message data.
  * @param {Database} db - The database instance to use for chat operations.
  * @returns {Object} An object containing methods to create chats, messages, and retrieve chat details.
-***/
+ ***/
 export const createChatRepository = (db) => {
   const insertChat = db.prepare(`
     INSERT INTO chats(title, user_id) VALUES (@title, @user_id)
@@ -17,7 +17,7 @@ export const createChatRepository = (db) => {
   const insertMessage = db.prepare(`
     INSERT INTO messages(chat_id, text, sender) VALUES (@chat_id, @text, @sender)
   `);
-  
+
   const insertMessageWithTime = db.prepare(`
     INSERT INTO messages(chat_id, text, sender, created_at) VALUES (@chat_id, @text, @sender, @created_at)
   `);
@@ -31,7 +31,7 @@ export const createChatRepository = (db) => {
   `);
 
   const getNewestSortedChatMessagesById = db.prepare(`
-    SELECT * FROM messages WHERE chat_id = ? ORDER BY created_at DESC
+    SELECT * FROM messages WHERE chat_id = ? ORDER BY created_at ASC
   `);
 
   const getAllChatsByNewestMessageFirst = db.prepare(`
@@ -42,30 +42,38 @@ export const createChatRepository = (db) => {
     SELECT * FROM chats WHERE id = ?
   `);
 
-
   const createChat = (userId, createdAt) => {
     const dateTime = createdAt || Date.now();
     // should be Chat @ 7:57PM on 20 Aug 2025
-    const formattedDate = dateTime.toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: 'numeric',
-      hour12: true
+    const formattedDate = dateTime.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: true,
     });
     const generatedTitle = `Chat @ ${formattedDate}`;
 
-    const result = createdAt 
-      ? insertChatWithTime.run({ title: generatedTitle, user_id: userId, created_at: createdAt }) 
+    const result = createdAt
+      ? insertChatWithTime.run({
+          title: generatedTitle,
+          user_id: userId,
+          created_at: createdAt,
+        })
       : insertChat.run({ title: generatedTitle, user_id: userId });
 
-    return result.lastInsertRowid; 
+    return result.lastInsertRowid;
   };
 
   const createMessage = (chatId, text, sender, createdAt) => {
-    const result = createdAt 
-      ? insertMessageWithTime.run({ chat_id: chatId, text, sender, created_at: createdAt }) 
+    const result = createdAt
+      ? insertMessageWithTime.run({
+          chat_id: chatId,
+          text,
+          sender,
+          created_at: createdAt,
+        })
       : insertMessage.run({ chat_id: chatId, text, sender });
 
     return result.lastInsertRowid;
@@ -90,25 +98,25 @@ export const createChatRepository = (db) => {
   const getAllChats = () => {
     return getAllChatsByNewestMessageFirst.all();
   };
-  
-  return { 
+
+  return {
     createChat,
     createMessage,
     getLastMessageOfChat,
     updateLastMessageTimeOfChat,
     getChatMessagesById,
     getAllChats,
-    getChatDetails
+    getChatDetails,
   };
 };
 
-/*** 
+/***
  * Initializes the chat database with the necessary tables.
  * @param {boolean} isTesting - If true, uses an in-memory database for testing.
  * @returns {Database} The initialized database instance.
-***/
+ ***/
 export const initializeChatDB = (isTesting = false) => {
-  const dbName = isTesting ? ':memory:' : 'chats.db';
+  const dbName = isTesting ? ":memory:" : "chats.db";
   const db = new Database(dbName);
 
   db.exec(`
@@ -128,5 +136,5 @@ export const initializeChatDB = (isTesting = false) => {
     );
   `);
 
-    return db;
+  return db;
 };
