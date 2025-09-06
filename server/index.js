@@ -8,6 +8,8 @@ import createMemoryComponents from "./features/memory/factory.js";
 import createConversationsRouter from "./features/conversations/index.js";
 import createConversationsService from "./features/conversations/service.js";
 import createTestConversationRouter from "./features/conversations/test-router.js";
+import createChatsComponents from "./features/chats/factory.js";
+import { createChatsRouter } from "./features/chats/index.js";
 import { unwrapErr } from "./utils/result.js";
 
 const USER_ID = "default";
@@ -21,6 +23,9 @@ const completionsService = createConversationsService(
   USER_ID
 );
 
+const chatsComponents = createChatsComponents();
+const { chatService, shutdown } = chatsComponents;
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
@@ -32,6 +37,7 @@ app.use(
   createConversationsRouter(completionsService, USER_ID)
 );
 app.use("/api/completions", createTestConversationRouter());
+app.use("/api/chats", createChatsRouter(chatService, USER_ID));
 
 app.get("/health", (_, res) => {
   res.json({ status: "OK", message: "LLM Chat Server is running" });
@@ -51,6 +57,8 @@ app.listen(PORT, () => {
 process.on("SIGINT", () => {
   console.log("Shutting down gracefully...");
   const results = memoryComponents.shutdown();
+  results.push(...shutdown());
+
   results.forEach((result, index) => {
     if (result.ok) {
       console.log(`Database ${index} closed successfully.`);
