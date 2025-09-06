@@ -12,10 +12,13 @@ const ChatInterface = () => {
   const [stream, setStream] = useState<string>('')
   const [messageList, setMessageList] = useState<Message[]>([])
 
+  const hasMessages = messageList.length > 0
+  const lastMessageIsUser = hasMessages && messageList[messageList.length - 1].role === 'user'
+  // Only call the LLM API when the last message is from the user
   const { isError, error } = useQuery({
     queryKey: ['currentChat', messageList],
     queryFn: () => callLLMResponse(messageList, setStream, handleMessageSend),
-    enabled: messageList.length > 0 && messageList[messageList.length - 1].role === 'user',
+    enabled: hasMessages && lastMessageIsUser,
   })
 
   const handleMessageSend = (sender: 'assistant' | 'user', message: string) => {
