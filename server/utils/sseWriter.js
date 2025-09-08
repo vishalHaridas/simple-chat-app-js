@@ -9,6 +9,7 @@ export default (res) => {
       return Err("write_error", "Failed to write SSE chunk");
     }
     try {
+      console.log("SENDING SSE DATA OFF: ", data);
       res.write(data);
       return Ok();
     } catch (error) {
@@ -16,6 +17,7 @@ export default (res) => {
       return Err("write_error", "Failed to write SSE chunk");
     }
   };
+
   const setupHeaders = () => {
     res.set({
       "Content-Type": "text/event-stream",
@@ -28,13 +30,13 @@ export default (res) => {
     return Ok();
   };
 
-  const writeLLMStream = async (reader) => {
-    const { value, done: readerDone } = await reader.read();
-    if (readerDone) return Ok({ done: true });
-    const chunk = new TextDecoder("utf-8").decode(value);
-    console.log(`chunk: ${chunk}`);
-    writeSSE(chunk);
-    return Ok({ done: false });
+  const writeLLMStream = async (value, readerDone) => {
+    if (readerDone) {
+      return Ok({ done: true, result: "" });
+    }
+    console.log(`going to write chunk: ${value}`);
+    writeSSE(value);
+    return Ok({ done: false, result: value });
   };
 
   const writeError = (error) => {

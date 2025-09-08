@@ -1,6 +1,6 @@
-import { useQuery, experimental_streamedQuery } from '@tanstack/react-query'
+import { useQuery, experimental_streamedQuery, useMutation } from '@tanstack/react-query'
 import { useAtom, useAtomValue } from 'jotai'
-import { useEffect, useState } from 'react'
+import { use, useEffect, useState } from 'react'
 
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import callLLMGenerator from '@/utils/api/callLLMResponse'
@@ -14,11 +14,11 @@ const ChatInterface = () => {
   console.log('Rendering ChatInterface component')
 
   const currentChatID = useAtomValue(currentChatIdAtom)
-  const [_, setMessageList] = useState<Message[]>([])
+  const [userMessageList, setUserMessageList] = useState<Message[]>([])
 
   console.log('Current Chat ID:', currentChatID)
 
-  const fetchChatById = async (chatId: string) => {
+  const fetchMessagesByChatId = async (chatId: string) => {
     const url = `http://localhost:3001/api/chats/${chatId}`
     const request = new Request(`http://localhost:3001/api/chats/${chatId}`, { method: 'GET' })
     const response = await fetch(request)
@@ -33,9 +33,10 @@ const ChatInterface = () => {
     data: messageListData,
     isError: messageListIsError,
     error: messageListError,
+    refetch: refetchMessageList,
   } = useQuery({
     queryKey: ['currentChat', currentChatID],
-    queryFn: () => fetchChatById(currentChatID!),
+    queryFn: () => fetchMessagesByChatId(currentChatID!),
     enabled: !!currentChatID,
     select: (data) => {
       console.log('Raw data from fetchChatById:', data)
@@ -54,6 +55,37 @@ const ChatInterface = () => {
     initialData: [],
   })
 
+  const sendUserMessageToServer = async (message: string) => {
+    if (!currentChatID) {
+      console.error('No current chat ID set')
+      return
+    }
+    const url = `http://localhost:3001/api/chats/${currentChatID}/messages`
+    const request = new Request(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sender: 'user', text: message, chat_id: currentChatID }),
+    })
+    const response = await fetch(request)
+    if (!response.ok) {
+      console.error('Error sending user message to server:', response.statusText)
+      throw new Error('Network response was not ok')
+    }
+    return response.json()
+  }
+
+  const { mutate } = useMutation({
+    mutationKey: ['sendUserMessage'],
+    mutationFn: () => sendUserMessageToServer(userMessageList[userMessageList.length - 1].content),
+    onSuccess: () => {
+      console.log('User message sent successfully, refetching message list')
+      refetchMessageList()
+    },
+    onError: (error) => {
+      console.error('Error sending user message:', error)
+    },
+  })
+
   const hasMessages = messageListData.length > 0
   const lastMessageIsUser =
     hasMessages && messageListData[messageListData.length - 1].role === 'user'
@@ -61,20 +93,27 @@ const ChatInterface = () => {
   const { data, isError, error } = useQuery({
     queryKey: ['currentChat', messageListData],
     queryFn: experimental_streamedQuery({
-      queryFn: () => callLLMGenerator(messageListData),
+      queryFn: () => callLLMGenerator(messageListData, currentChatID!),
     }),
     enabled: hasMessages && lastMessageIsUser,
   })
 
-  const updateMessageListWith = (sender: 'assistant' | 'user', message: string) =>
-    setMessageList((prev) => [...prev, { role: sender, content: message }])
+  const updateMessageListWith = (sender: 'assistant' | 'user', message: string) => {
+    setUserMessageList((prev) => [...prev, { role: sender, content: message }])
+  }
+
+  useEffect(() => {
+    if (userMessageList.length === 0) return
+    console.log('User message list updated:', userMessageList)
+    mutate()
+  }, [userMessageList])
 
   const unwrappedStream = data?.map((chunk) => chunk.value).join('') ?? ''
-  const lastChunk = data?.[data?.length - 1]
-  if (lastChunk && lastChunk.done) {
-    const fullResponse = unwrappedStream
-    updateMessageListWith('assistant', fullResponse)
-  }
+  // const lastChunk = data?.[data?.length - 1]
+  // if (lastChunk && lastChunk.done) {
+  //   const fullResponse = unwrappedStream
+  //   updateMessageListWith('assistant', fullResponse)
+  // }
 
   return (
     <div className="flex h-screen w-full flex-col bg-slate-100">

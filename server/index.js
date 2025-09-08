@@ -17,14 +17,15 @@ const USER_ID = "default";
 const memoryComponents = createMemoryComponents();
 const { memoryFacade } = memoryComponents;
 
+const chatsComponents = createChatsComponents();
+const { chatService, shutdown } = chatsComponents;
+
 const completionsService = createConversationsService(
   memoryFacade,
   providerCall,
+  chatService,
   USER_ID
 );
-
-const chatsComponents = createChatsComponents();
-const { chatService, shutdown } = chatsComponents;
 
 const app = express();
 const PORT = process.env.PORT || 3001;

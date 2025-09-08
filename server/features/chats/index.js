@@ -33,5 +33,45 @@ export const createChatsRouter = (chatService, userId) => {
     }
   });
 
+  router.post("/", (req, res) => {
+    const { text, created_at } = req.body;
+    if (!text) {
+      return res.status(400).json({ error: "Text is required to create chat" });
+    }
+    try {
+      const newChat = chatService.createNewChat(USER_ID, text, created_at);
+      res.status(201).json(newChat);
+    } catch (error) {
+      console.error("Error creating chat:", error);
+      res
+        .status(500)
+        .json({ error: "Failed to create chat", message: error.message });
+    }
+  });
+
+  router.post("/:chatId/messages", (req, res) => {
+    const { chatId } = req.params;
+    const { text, sender, created_at } = req.body;
+    if (!text || !sender) {
+      return res
+        .status(400)
+        .json({ error: "Text and sender are required to add message" });
+    }
+    try {
+      const newMessage = chatService.addChatMessage(
+        chatId,
+        text,
+        sender,
+        created_at
+      );
+      res.status(201).json(newMessage);
+    } catch (error) {
+      console.error(`Error adding message to chat ${chatId}:`, error);
+      res
+        .status(500)
+        .json({ error: "Failed to add message", message: error.message });
+    }
+  });
+
   return router;
 };

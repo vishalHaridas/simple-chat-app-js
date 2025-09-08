@@ -51,10 +51,10 @@ const parseStreamedChunk = (chunk: string): string => {
   return ''
 }
 
-export default (messageList: Message[]) => {
+export default (messageList: Message[], chatId: string) => {
   return {
     async *[Symbol.asyncIterator]() {
-      const requestBody = { messages: messageList }
+      const requestBody = { messages: messageList, chat_id: chatId }
       console.log('Calling Generator LLM with messages:', requestBody)
 
       const request = new Request('http://localhost:3001/api/completions/stream', {
@@ -77,7 +77,8 @@ export default (messageList: Message[]) => {
         const { value, done: doneReading } = await reader.read()
         done = doneReading
         const chunkValue = decoder.decode(value)
-        const parsedChunk = parseStreamedChunk(chunkValue)
+        // const parsedChunk = parseStreamedChunk(chunkValue)
+        const parsedChunk = chunkValue
         if (parsedChunk) {
           yield { done: false, value: parsedChunk }
         }

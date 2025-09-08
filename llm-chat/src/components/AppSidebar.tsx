@@ -47,12 +47,8 @@ export const AppSidebar = () => {
     select: (data) => data.map((chat: any) => ({ id: chat.id, title: chat.title })),
   })
 
-  console.log('Chat list data:', data, isError, error)
-
   const SideBarMenuChildrenChats = (props: { chatList: { id: string; title: string }[] }) => {
     const [_, setCurrentChatId] = useAtom(currentChatIdAtom)
-
-    console.log('passed in chatList', props.chatList)
 
     if (!props.chatList || props.chatList.length === 0) {
       return (

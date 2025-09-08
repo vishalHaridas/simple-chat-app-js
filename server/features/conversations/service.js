@@ -1,6 +1,6 @@
 import { Ok, Err, assumeOk } from "../../utils/result.js";
 
-export default (memoryFacade, provider, USER_ID) => {
+export default (memoryFacade, provider, chatsService, USER_ID) => {
   // handle memory command
   /**
    * Handles a memory command message.
@@ -67,6 +67,49 @@ export default (memoryFacade, provider, USER_ID) => {
     return Ok(SYSTEM_PROMPT);
   };
 
+  const parseProviderResponseReader = (value) => {
+    // {"choices":[{"delta":{"content":"!"},"finish_reason":null}]}
+    // {"choices":[{"delta":{},"finish_reason":"stop"}]}
+
+    // data: {"choices":[{"delta":{"content":" by"},"finish_reason":null}]}
+    console.log("going to parse", value);
+    if (value === "[DONE]" || value === "end") return "";
+    let parsedText = "";
+    try {
+      console.log("starting try");
+      if (!value) {
+        console.log("returning as there is no value");
+        return "";
+      }
+      console.log("does value start with data? ", value.startsWith("data: "));
+      if (value.startsWith("data: ")) {
+        console.log("value starts with data!");
+        const jsonStr = value.replace("data: ", "").trim();
+        if (jsonStr === "[DONE]") {
+          return "";
+        }
+        console.log("after trimming data: ", jsonStr);
+        const data = JSON.parse(jsonStr);
+        const content = data.choices[0].delta.content;
+        console.log("content:", content);
+        const finishReason = data.choices[0].finish_reason;
+        console.log("finish reason :", finishReason);
+
+        if (content) {
+          parsedText += content;
+        }
+
+        if (finishReason === "stop") {
+          return parsedText;
+        }
+      }
+      return parsedText;
+    } catch (err) {
+      console.error("Error parsin chunk", err);
+      return Err("parse_err", "Error parsing chunk" + err);
+    }
+  };
+
   // call provider
   const handleProviderCall = async (
     model = "qwen/qwen3-1.7b",
@@ -106,5 +149,22 @@ export default (memoryFacade, provider, USER_ID) => {
     return Ok(upStream);
   };
 
-  return { handleMemory, handleProviderCall };
+  const addAssistantMessageToChat = (chatId, text, createdAt) => {
+    const createdAtValue = createdAt || new Date().toISOString();
+
+    const messageId = chatsService.addChatMessage(
+      chatId,
+      text,
+      "assistant",
+      createdAtValue
+    );
+    return Ok(messageId);
+  };
+
+  return {
+    handleMemory,
+    handleProviderCall,
+    addAssistantMessageToChat,
+    parseProviderResponseReader,
+  };
 };
