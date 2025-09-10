@@ -26,7 +26,7 @@ export default (res) => {
       "Allow-Control-Allow-Origin": "*",
     });
     res.flushHeaders();
-    writeSSE(":\n\n");
+    writeSSE("\n\n");
     return Ok();
   };
 
