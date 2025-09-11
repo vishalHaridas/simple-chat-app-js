@@ -1,4 +1,9 @@
-import { useQuery, experimental_streamedQuery, useMutation } from '@tanstack/react-query'
+import {
+  useQuery,
+  experimental_streamedQuery,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query'
 import { useAtom, useAtomValue } from 'jotai'
 import { use, useEffect, useState } from 'react'
 
@@ -9,25 +14,17 @@ import type { Chat, Message } from '@/utils/types'
 import ChatMessageInputBar from './ui/chatMessageInputBar'
 import ChatMessages from './ui/chatMessageList'
 import { currentChatIdAtom } from '@/utils/store/jotai'
+import fetchMessagesByChatId from '@/utils/api/fetchMessagesByChatId'
+import sendUserMessageToServer from '@/utils/api/sendUserMessageToServer'
 
 const ChatInterface = () => {
   console.log('Rendering ChatInterface component')
 
   const currentChatID = useAtomValue(currentChatIdAtom)
   const [userMessageList, setUserMessageList] = useState<Message[]>([])
+  const queryClient = useQueryClient()
 
   console.log('Current Chat ID:', currentChatID)
-
-  const fetchMessagesByChatId = async (chatId: string) => {
-    const url = `http://localhost:3001/api/chats/${chatId}`
-    const request = new Request(`http://localhost:3001/api/chats/${chatId}`, { method: 'GET' })
-    const response = await fetch(request)
-    if (!response.ok) {
-      console.error('Error fetching chat by ID:', response.statusText)
-      throw new Error('Network response was not ok')
-    }
-    return response.json()
-  }
 
   const {
     data: messageListData,
@@ -55,34 +52,19 @@ const ChatInterface = () => {
     initialData: [],
   })
 
-  const sendUserMessageToServer = async (message: string) => {
-    if (!currentChatID) {
-      console.error('No current chat ID set')
-      return
-    }
-    const url = `http://localhost:3001/api/chats/${currentChatID}/messages`
-    const request = new Request(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sender: 'user', text: message, chat_id: currentChatID }),
-    })
-    const response = await fetch(request)
-    if (!response.ok) {
-      console.error('Error sending user message to server:', response.statusText)
-      throw new Error('Network response was not ok')
-    }
-    return response.json()
-  }
-
   const { mutate } = useMutation({
     mutationKey: ['sendUserMessage'],
-    mutationFn: () => sendUserMessageToServer(userMessageList[userMessageList.length - 1].content),
+    mutationFn: (body: { message: string; currentChatID: string }) => sendUserMessageToServer(body),
     onSuccess: () => {
       console.log('User message sent successfully, refetching message list')
       refetchMessageList()
     },
     onError: (error) => {
       console.error('Error sending user message:', error)
+    },
+    onMutate: () => {
+      console.log('invalidating queries, now..')
+      queryClient.invalidateQueries()
     },
   })
 
@@ -105,15 +87,13 @@ const ChatInterface = () => {
   useEffect(() => {
     if (userMessageList.length === 0) return
     console.log('User message list updated:', userMessageList)
-    mutate()
+    mutate({
+      message: userMessageList[userMessageList.length - 1].content,
+      currentChatID: currentChatID!,
+    })
   }, [userMessageList])
 
   const unwrappedStream = data?.map((chunk) => chunk.value).join('') ?? ''
-  // const lastChunk = data?.[data?.length - 1]
-  // if (lastChunk && lastChunk.done) {
-  //   const fullResponse = unwrappedStream
-  //   updateMessageListWith('assistant', fullResponse)
-  // }
 
   return (
     <div className="flex h-screen w-full flex-col bg-slate-100">
