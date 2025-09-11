@@ -17,6 +17,7 @@ import { currentChatIdAtom } from '@/utils/store/jotai'
 import fetchMessagesByChatId from '@/utils/api/fetchMessagesByChatId'
 import sendUserMessageToServer from '@/utils/api/sendUserMessageToServer'
 import useMessageList from '@/utils/api/queryHooks/useMessageList'
+import useUserMessageToServerMutation from '@/utils/api/queryHooks/useUserMessageToServerMutation'
 
 const ChatInterface = () => {
   console.log('Rendering ChatInterface component')
@@ -28,22 +29,7 @@ const ChatInterface = () => {
   console.log('Current Chat ID:', currentChatID)
 
   const { messageListData, refetchMessageList } = useMessageList(currentChatID!)
-
-  const { mutate } = useMutation({
-    mutationKey: ['sendUserMessage'],
-    mutationFn: (body: { message: string; currentChatID: string }) => sendUserMessageToServer(body),
-    onSuccess: () => {
-      console.log('User message sent successfully, refetching message list')
-      refetchMessageList()
-    },
-    onError: (error) => {
-      console.error('Error sending user message:', error)
-    },
-    onMutate: () => {
-      console.log('invalidating queries, now..')
-      queryClient.invalidateQueries()
-    },
-  })
+  const { mutate } = useUserMessageToServerMutation(refetchMessageList)
 
   const hasMessages = messageListData.length > 0
   const lastMessageIsUser =
