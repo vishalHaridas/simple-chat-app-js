@@ -16,6 +16,7 @@ import ChatMessages from './ui/chatMessageList'
 import { currentChatIdAtom } from '@/utils/store/jotai'
 import fetchMessagesByChatId from '@/utils/api/fetchMessagesByChatId'
 import sendUserMessageToServer from '@/utils/api/sendUserMessageToServer'
+import useMessageList from '@/utils/api/queryHooks/useMessageList'
 
 const ChatInterface = () => {
   console.log('Rendering ChatInterface component')
@@ -26,26 +27,7 @@ const ChatInterface = () => {
 
   console.log('Current Chat ID:', currentChatID)
 
-  const { data: messageListData, refetch: refetchMessageList } = useQuery({
-    queryKey: ['currentChat', currentChatID],
-    queryFn: () => fetchMessagesByChatId(currentChatID!),
-    enabled: !!currentChatID,
-    select: (data) => {
-      console.log('Raw data from fetchChatById:', data)
-      if (Array.isArray(data)) {
-        const messages = data.map((item: any) => ({
-          role: item.sender === 'user' ? 'user' : 'assistant',
-          content: item.text as string,
-        }))
-        console.log('Transformed messages:', messages)
-        return messages as Message[]
-      } else {
-        console.warn('Unexpected data format:', data)
-        return []
-      }
-    },
-    initialData: [],
-  })
+  const { messageListData, refetchMessageList } = useMessageList(currentChatID!)
 
   const { mutate } = useMutation({
     mutationKey: ['sendUserMessage'],
