@@ -26,12 +26,7 @@ const ChatInterface = () => {
 
   console.log('Current Chat ID:', currentChatID)
 
-  const {
-    data: messageListData,
-    isError: messageListIsError,
-    error: messageListError,
-    refetch: refetchMessageList,
-  } = useQuery({
+  const { data: messageListData, refetch: refetchMessageList } = useQuery({
     queryKey: ['currentChat', currentChatID],
     queryFn: () => fetchMessagesByChatId(currentChatID!),
     enabled: !!currentChatID,
@@ -94,6 +89,15 @@ const ChatInterface = () => {
   }, [userMessageList])
 
   const unwrappedStream = data?.map((chunk) => chunk.value).join('') ?? ''
+  const generationDone = data?.map((chunk) => chunk.done).find((value) => value) ?? false
+
+  useEffect(() => {
+    console.log('This should mean the genration is done!')
+    console.log('Going to invalidate client!')
+
+    queryClient.invalidateQueries()
+    refetchMessageList()
+  }, [generationDone])
 
   return (
     <div className="flex h-screen w-full flex-col bg-slate-100">
