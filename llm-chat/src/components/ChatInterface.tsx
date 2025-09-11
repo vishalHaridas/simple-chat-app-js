@@ -18,6 +18,7 @@ import fetchMessagesByChatId from '@/utils/api/fetchMessagesByChatId'
 import sendUserMessageToServer from '@/utils/api/sendUserMessageToServer'
 import useMessageList from '@/utils/api/queryHooks/useMessageList'
 import useUserMessageToServerMutation from '@/utils/api/queryHooks/useUserMessageToServerMutation'
+import useLLMCaller from '@/utils/api/queryHooks/useLLMCaller'
 
 const ChatInterface = () => {
   console.log('Rendering ChatInterface component')
@@ -35,13 +36,8 @@ const ChatInterface = () => {
   const lastMessageIsUser =
     hasMessages && messageListData[messageListData.length - 1].role === 'user'
   // Only call the LLM API when the last message is from the user
-  const { data, isError, error } = useQuery({
-    queryKey: ['currentChat', messageListData],
-    queryFn: experimental_streamedQuery({
-      queryFn: () => callLLMGenerator(messageListData, currentChatID!),
-    }),
-    enabled: hasMessages && lastMessageIsUser,
-  })
+  const enableLLMQuery = hasMessages && lastMessageIsUser
+  const { data, isError, error } = useLLMCaller(messageListData, currentChatID!, enableLLMQuery)
 
   const updateMessageListWith = (sender: 'assistant' | 'user', message: string) => {
     setUserMessageList((prev) => [...prev, { role: sender, content: message }])
