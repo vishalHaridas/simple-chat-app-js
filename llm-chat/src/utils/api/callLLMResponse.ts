@@ -55,7 +55,6 @@ export default (messageList: Message[], chatId: string) => {
   return {
     async *[Symbol.asyncIterator]() {
       const requestBody = { messages: messageList, chat_id: chatId }
-      console.log('Calling Generator LLM with messages:', requestBody)
 
       const request = new Request('http://localhost:3001/api/completions/stream', {
         method: 'POST',
@@ -63,7 +62,6 @@ export default (messageList: Message[], chatId: string) => {
         headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
       })
       const streamResp = await fetch(request)
-      console.log('Fetch response:', streamResp)
 
       if (!streamResp.ok) throw new Error('Network response was not ok')
       if (!streamResp.body) throw new Error('No response body')
@@ -99,7 +97,6 @@ export const callLLMResponse = async (
   handleMessageSend: (sender: 'assistant' | 'user', message: string) => void,
 ) => {
   const requestBody = { messages: messageList }
-  console.log('Calling LLM with messages:', requestBody)
 
   const request = new Request('http://localhost:3001/api/completions/stream', {
     method: 'POST',
@@ -107,7 +104,6 @@ export const callLLMResponse = async (
     headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
   })
   const streamResp = await fetch(request)
-  console.log('Fetch response:', streamResp)
 
   if (!streamResp.ok) throw new Error('Network response was not ok')
   if (!streamResp.body) throw new Error('No response body')

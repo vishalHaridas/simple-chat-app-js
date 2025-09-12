@@ -9,7 +9,6 @@ export default (res) => {
       return Err("write_error", "Failed to write SSE chunk");
     }
     try {
-      console.log("SENDING SSE DATA OFF: ", data);
       res.write(data);
       return Ok();
     } catch (error) {
@@ -34,7 +33,6 @@ export default (res) => {
     if (readerDone) {
       return Ok({ done: true, result: "" });
     }
-    console.log(`going to write chunk: ${value}`);
     writeSSE(value);
     return Ok({ done: false, result: value });
   };

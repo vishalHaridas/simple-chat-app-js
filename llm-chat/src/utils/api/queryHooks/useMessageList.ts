@@ -8,13 +8,11 @@ const useMessageList = (currentChatID: string) => {
     queryFn: () => fetchMessagesByChatId(currentChatID),
     enabled: !!currentChatID,
     select: (data) => {
-      console.log('Raw data from fetchChatById:', data)
       if (Array.isArray(data)) {
         const messages = data.map((item: any) => ({
           role: item.sender === 'user' ? 'user' : 'assistant',
           content: item.text as string,
         }))
-        console.log('Transformed messages:', messages)
         return messages as Message[]
       } else {
         console.warn('Unexpected data format:', data)
