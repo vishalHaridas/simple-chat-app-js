@@ -43,6 +43,7 @@ const ChatInterface = () => {
     setUserMessageList((prev) => [...prev, { role: sender, content: message }])
   }
 
+  // This is just a test push
   useEffect(() => {
     if (userMessageList.length === 0) return
     console.log('User message list updated:', userMessageList)
