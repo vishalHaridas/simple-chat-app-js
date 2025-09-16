@@ -39,19 +39,14 @@ const ChatInterface = () => {
   const enableLLMQuery = hasMessages && lastMessageIsUser
   const { data, isError, error } = useLLMCaller(messageListData, currentChatID!, enableLLMQuery)
 
-  const updateMessageListWith = (sender: 'assistant' | 'user', message: string) => {
-    setUserMessageList((prev) => [...prev, { role: sender, content: message }])
-  }
-
-  // This is just a test push
-  useEffect(() => {
-    if (userMessageList.length === 0) return
-    console.log('User message list updated:', userMessageList)
+  const handleUserMessageSend = (message: string) => {
+    const newMesageList: Message[] = [...messageListData, {content: message, role: "user"}];
+    setUserMessageList(newMesageList)
     mutate({
       message: userMessageList[userMessageList.length - 1].content,
       currentChatID: currentChatID!,
     })
-  }, [userMessageList])
+  }
 
   const unwrappedStream = data?.map((chunk) => chunk.value).join('') ?? ''
   const generationDone = data?.map((chunk) => chunk.done).find((value) => value) ?? false
@@ -81,7 +76,8 @@ const ChatInterface = () => {
           />
           <ChatMessageInputBar
             handleSendMessage={(value: string) => {
-              updateMessageListWith('user', value)
+              handleUserMessageSend(value)
+              // updateMessageListWith('user', value)
             }}
           />
         </section>
