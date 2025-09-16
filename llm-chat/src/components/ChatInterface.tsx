@@ -51,13 +51,10 @@ const ChatInterface = () => {
   const unwrappedStream = data?.map((chunk) => chunk.value).join('') ?? ''
   const generationDone = data?.map((chunk) => chunk.done).find((value) => value) ?? false
 
-  useEffect(() => {
-    console.log('This should mean the genration is done!')
-    console.log('Going to invalidate client!')
-
+  if (generationDone){
     queryClient.invalidateQueries()
     refetchMessageList()
-  }, [generationDone])
+  }
 
   return (
     <div className="flex h-screen w-full flex-col bg-slate-100">
